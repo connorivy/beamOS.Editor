@@ -1,6 +1,4 @@
 import * as THREE from 'three';
-import { TransformControls } from 'three/addons/controls/TransformControls.js';
-import { EditorControls } from './EditorControls';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 
 export class BeamOsEditor {
@@ -38,11 +36,17 @@ export class BeamOsEditor {
         const cube = new THREE.Mesh( geometry, material );
         this.scene.add( cube );
 
-        this.camera.position.z = 5;
-        const transformControls = new TransformControls( this.camera, this.domElement );
+        const controls = new OrbitControls( this.camera, this.renderer.domElement );
 
-        const controls = new EditorControls(this.camera, this.domElement)
-        controls.enabled = true;
+        //controls.update() must be called after any manual changes to the camera's transform
+        this.camera.position.set( 5, 5, 10 );
+        controls.update();
+
+        // this.camera.position.z = 5;
+        // const transformControls = new TransformControls( this.camera, this.domElement );
+
+        // const controls = new EditorControls(this.camera, this.domElement)
+        // controls.enabled = true;
     }
 
     public animate() {
