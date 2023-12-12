@@ -4,10 +4,14 @@
 		<title>three.js editor</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		<link rel="apple-touch-icon" href="images/icon.png">
 		<link rel="manifest" href="manifest.json">
 	</head>
-	<body>
-    <div id="editor"></div>
+	<body style="margin: 0;">
+    	<div id="editor" style="height: 100%; width: 100%;"></div>
+		<script type="module">
+			import { BeamOsEditor } from './src/BeamOsEditor'
+			const editor = BeamOsEditor.createFromId("editor")
+			editor.animate()
+		</script>
 	</body>
 </html>
