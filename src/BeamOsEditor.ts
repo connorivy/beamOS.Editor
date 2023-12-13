@@ -3,16 +3,16 @@ import { NodeResponse } from './PhysicalModel.Contracts/NodeResponse'
 import { Raycaster } from './Raycaster';
 import { Controls } from './Controls';
 import { TransformController } from './TransformController';
+import { Selector, SelectorInfo } from './Selector';
 
 export class BeamOsEditor {
     scene: THREE.Scene
     camera: THREE.PerspectiveCamera
     renderer: THREE.WebGLRenderer
     mouse: THREE.Vector2
-    onDownPosition: THREE.Vector2 = new THREE.Vector2(0, 0)
-    onUpPosition: THREE.Vector2 = new THREE.Vector2(0, 0)
     raycaster: Raycaster
     transformController: TransformController
+    selector: Selector;
 
     constructor(public domElement: HTMLElement)
     {
@@ -20,11 +20,21 @@ export class BeamOsEditor {
         this.camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 1000 );
         this.camera.position.set( 5, 5, 10 );
 
+        const selectorInfo = new SelectorInfo()
+
         this.renderer = new THREE.WebGLRenderer({ canvas: domElement, antialias: true });
         this.mouse = new THREE.Vector2(-1000, -1000);
-        this.raycaster = new Raycaster(this.renderer, this.scene, this.mouse, this.camera);
+        this.raycaster = new Raycaster(this.renderer, this.scene, this.mouse, this.camera, selectorInfo);
         const controls = new Controls(this.camera, this.domElement);
-        this.transformController = new TransformController(this.camera, this.domElement, controls.controls)
+        this.transformController = new TransformController(this.scene, this.camera, this.domElement, controls.controls)
+        this.selector = new Selector(
+            this.domElement, 
+            this.scene, 
+            this.mouse, 
+            this.raycaster.raycastInfo, 
+            selectorInfo,
+            this.transformController)
+
         this.initCanvas();
         this.animate();
     }
@@ -50,9 +60,6 @@ export class BeamOsEditor {
         const cube = new THREE.Mesh( geometry, material );
         this.scene.add( cube );
 
-        this.transformController.transformControl.attach(cube);
-        this.scene.add(this.transformController.transformControl)
-
         const grid = new THREE.Group();
 
         const grid1 = new THREE.GridHelper( 30, 30, 0x282828 );
@@ -66,6 +73,11 @@ export class BeamOsEditor {
         grid.add( grid2 );
 
         this.scene.add(grid)
+
+        // const box = new THREE.Box3();
+        // const selectionBox = new THREE.Box3Helper(box);
+        // this.scene.add(selectionBox);
+        // selectionBox.box.setFromObject(cube);
     }
 
     resizeCanvasToDisplaySize( _event: Event ) {
@@ -109,7 +121,10 @@ export class BeamOsEditor {
 
     public animate() {
         requestAnimationFrame( this.animate.bind(this) );
-        this.render()
+
+        this.selector.animate();
+
+        this.render();
     }
 
     render() {
@@ -117,46 +132,4 @@ export class BeamOsEditor {
 
         this.raycaster.raycast()
     }
-
-    onMouseDown( event: MouseEvent ) {
-
-		// event.preventDefault();
-
-		if ( event.target !== this.renderer.domElement ) return;
-
-		const array = BeamOsEditor.getMousePosition( this.domElement, event.clientX, event.clientY );
-		this.onDownPosition.fromArray( array );
-
-		document.addEventListener( 'mouseup', this.onMouseUp );
-
-	}
-
-	onMouseUp( event: MouseEvent ) {
-
-		const array = BeamOsEditor.getMousePosition( this.domElement, event.clientX, event.clientY );
-		this.onUpPosition.fromArray( array );
-
-		this.handleClick();
-
-		document.removeEventListener( 'mouseup', this.onMouseUp );
-
-	}
-
-    static getMousePosition( dom: HTMLElement, x: number, y: number ) {
-		const rect = dom.getBoundingClientRect();
-		return [ ( x - rect.left ) / rect.width, ( y - rect.top ) / rect.height ];
-	}
-
-    handleClick() {
-
-		if ( this.onDownPosition.distanceTo( this.onUpPosition ) === 0 ) {
-
-			// const intersects = this.getIntersects( this.onUpPosition );
-			// signals.intersectionsDetected.dispatch( intersects );
-
-			this.render();
-
-		}
-
-	}
 }

@@ -1,15 +1,19 @@
 import * as THREE from 'three';
+import { SelectorInfo } from './Selector';
 
 export class Raycaster {
     public raycaster: THREE.Raycaster = new THREE.Raycaster();
     public tabIndex: number = 0
-    public intersected?: IntersectedMeshProperties
+    public raycastInfo: RaycastInfo
     constructor(
         private renderer: THREE.Renderer,
         private scene: THREE.Scene,
         private mouse: THREE.Vector2,
-        private camera: THREE.Camera) {
-        window.addEventListener( 'pointermove', this.onPointerMove.bind(this) );
+        private camera: THREE.Camera,
+        private selectorInfo: SelectorInfo) {
+
+            this.raycastInfo = new RaycastInfo();
+            window.addEventListener( 'pointermove', this.onPointerMove.bind(this) );
     }
 
     onPointerMove( event: MouseEvent ) {
@@ -36,11 +40,19 @@ export class Raycaster {
             : this.tabIndex;
             const intersectedObj = intersects[this.tabIndex];
 
-            if (this.intersected && this.intersected.id == intersectedObj.id) {
+            if (this.selectorInfo.currentlySelected?.id == intersectedObj.id) {
+                if (this.raycastInfo.currentlyRaycasted) {
+                    this.unhighlightRaycasted();
+                }
                 return;
             }
 
-            this.intersected = new IntersectedMeshProperties(
+            if (this.raycastInfo.currentlyRaycasted 
+                && this.raycastInfo.currentlyRaycasted.id == intersectedObj.id) {
+                return;
+            }
+
+            this.raycastInfo.currentlyRaycasted = new IntersectedMeshProperties(
                 intersectedObj.id, 
                 intersectedObj.material.emissive.getHex())
             
@@ -48,14 +60,21 @@ export class Raycaster {
         }
         else {
 
-            if ( this.intersected ) {
-                const sceneObj = this.scene.getObjectById(this.intersected.id) as THREE.Mesh
-                (sceneObj.material as THREE.MeshStandardMaterial).emissive.setHex(this.intersected.colorHex)
-            }
-
-            this.intersected = undefined;
+            this.unhighlightRaycasted();
         }
     }
+   
+    unhighlightRaycasted() {
+        if ( this.raycastInfo.currentlyRaycasted ) {
+            const sceneObj = this.scene.getObjectById(this.raycastInfo.currentlyRaycasted.id) as THREE.Mesh
+            (sceneObj.material as THREE.MeshStandardMaterial).emissive.setHex(this.raycastInfo.currentlyRaycasted.colorHex)
+        }
+        this.raycastInfo.currentlyRaycasted = undefined;
+    }
+}
+
+export class RaycastInfo {
+    public currentlyRaycasted?: IntersectedMeshProperties
 }
 
 export class IntersectedMeshProperties {
