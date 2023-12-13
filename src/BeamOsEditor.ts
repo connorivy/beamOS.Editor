@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { NodeResponse } from './PhysicalModel.Contracts/NodeResponse'
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { Raycaster } from './Raycaster';
+import { Controls } from './Controls';
 
 export class BeamOsEditor {
     scene: THREE.Scene
@@ -21,6 +21,8 @@ export class BeamOsEditor {
         this.raycaster = new Raycaster(this.renderer, this.scene, this.mouse, this.camera);
         this.initCanvas();
         this.animate();
+        // @ts-ignore:next-line
+        const controls = new Controls(this.camera, this.domElement)
     }
 
     static createFromId(domElementId: string) : BeamOsEditor {
@@ -44,11 +46,7 @@ export class BeamOsEditor {
         const cube = new THREE.Mesh( geometry, material );
         this.scene.add( cube );
 
-        const controls = new OrbitControls( this.camera, this.renderer.domElement );
-        
-        //controls.update() must be called after any manual changes to the camera's transform
         this.camera.position.set( 5, 5, 10 );
-        controls.update();
 
         const grid = new THREE.Group();
 
@@ -63,13 +61,6 @@ export class BeamOsEditor {
         grid.add( grid2 );
 
         this.scene.add(grid)
-
-
-        // this.camera.position.z = 5;
-        // const transformControls = new TransformControls( this.camera, this.domElement );
-
-        // const controls = new EditorControls(this.camera, this.domElement)
-        // controls.enabled = true;
     }
 
     resizeCanvasToDisplaySize( _event: Event ) {
