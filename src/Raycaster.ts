@@ -9,7 +9,7 @@ export class Raycaster {
         private scene: THREE.Scene,
         private mouse: THREE.Vector2,
         private camera: THREE.Camera) {
-
+        window.addEventListener( 'pointermove', this.onPointerMove.bind(this) );
     }
 
     onPointerMove( event: MouseEvent ) {

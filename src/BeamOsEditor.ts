@@ -1,32 +1,24 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { NodeResponse } from './PhysicalModel.Contracts/NodeResponse'
-
-export class IntersectedMeshProperties {
-    constructor(public id: number, public colorHex : number ) {
-
-    }
-}
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { Raycaster } from './Raycaster';
 
 export class BeamOsEditor {
     scene: THREE.Scene
     camera: THREE.PerspectiveCamera
     renderer: THREE.WebGLRenderer
-    raycaster: THREE.Raycaster
     mouse: THREE.Vector2
     onDownPosition: THREE.Vector2 = new THREE.Vector2(0, 0)
     onUpPosition: THREE.Vector2 = new THREE.Vector2(0, 0)
-    intersected?: IntersectedMeshProperties
-    tabIndex: number = 0
-
+    raycaster: Raycaster
 
     constructor(public domElement: HTMLElement)
     {
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 1000 );
         this.renderer = new THREE.WebGLRenderer({ canvas: domElement, antialias: true });
-        this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2(-1000, -1000);
+        this.raycaster = new Raycaster(this.renderer, this.scene, this.mouse, this.camera);
         this.initCanvas();
         this.animate();
     }
@@ -71,8 +63,6 @@ export class BeamOsEditor {
         grid.add( grid2 );
 
         this.scene.add(grid)
-
-        window.addEventListener( 'pointermove', this.onPointerMove.bind(this) );
 
 
         // this.camera.position.z = 5;
@@ -129,57 +119,7 @@ export class BeamOsEditor {
     render() {
         this.renderer.render( this.scene, this.camera );
 
-        this.raycast()
-    }
-
-    onPointerMove( event: MouseEvent ) {
-
-        // calculate pointer position in normalized device coordinates
-        // (-1 to +1) for both components
-
-        // this.mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-        // this.mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-
-        var rect = this.renderer.domElement.getBoundingClientRect();
-
-        this.mouse.x = ( ( event.clientX - rect.left ) / ( rect.width ) ) * 2 - 1;
-        this.mouse.y = - ( ( event.clientY - rect.top ) / ( rect.height) ) * 2 + 1;
-
-    }
-
-    raycast() {
-        this.raycaster.setFromCamera( this.mouse, this.camera );
-
-        // calculate objects intersecting the picking ray
-        const intersects = this.raycaster.intersectObjects( this.scene.children )
-            .filter(o => !(o.object instanceof THREE.GridHelper))
-            .map(o => o.object as THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>)
-
-        if ( intersects.length > 0 ) {
-            this.tabIndex = intersects.length >= this.tabIndex 
-            ? 0
-            : this.tabIndex;
-            const intersectedObj = intersects[this.tabIndex];
-
-            if (this.intersected && this.intersected.id == intersectedObj.id) {
-                return;
-            }
-
-            this.intersected = new IntersectedMeshProperties(
-                intersectedObj.id, 
-                intersectedObj.material.emissive.getHex())
-            
-            intersectedObj.material.emissive.setHex(0xff0000);
-        }
-        else {
-
-            if ( this.intersected ) {
-                const sceneObj = this.scene.getObjectById(this.intersected.id) as THREE.Mesh
-                (sceneObj.material as THREE.MeshStandardMaterial).emissive.setHex(this.intersected.colorHex)
-            }
-
-            this.intersected = undefined;
-        }
+        this.raycaster.raycast()
     }
 
     onMouseDown( event: MouseEvent ) {
@@ -221,30 +161,6 @@ export class BeamOsEditor {
 			this.render();
 
 		}
-
-	}
-
-    getIntersects( point: THREE.Vector2 ) {
-
-		this.mouse.set( ( point.x * 2 ) - 1, - ( point.y * 2 ) + 1 );
-
-		this.raycaster.setFromCamera( this.mouse, this.camera );
-
-		const objects:THREE.Object3D[] = [];
-
-		this.scene.traverseVisible( function ( child ) {
-
-			objects.push( child );
-
-		} );
-
-		// sceneHelpers.traverseVisible( function ( child ) {
-
-		// 	if ( child.name === 'picker' ) objects.push( child );
-
-		// } );
-
-		return this.raycaster.intersectObjects( objects, false );
 
 	}
 }
