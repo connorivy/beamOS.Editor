@@ -25,7 +25,9 @@ export class Raycaster {
         this.raycaster.setFromCamera( this.mouse, this.camera );
 
         const intersects = this.raycaster.intersectObjects( this.scene.children )
-            .filter(o => !(o.object instanceof THREE.GridHelper))
+            .filter(o => !(o.object instanceof THREE.GridHelper) 
+                && o.object instanceof THREE.Mesh
+                && o.object.material instanceof THREE.MeshStandardMaterial)
             .map(o => o.object as THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>)
 
         if ( intersects.length > 0 ) {

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { NodeResponse } from './PhysicalModel.Contracts/NodeResponse'
 import { Raycaster } from './Raycaster';
 import { Controls } from './Controls';
+import { TransformController } from './TransformController';
 
 export class BeamOsEditor {
     scene: THREE.Scene
@@ -11,18 +12,21 @@ export class BeamOsEditor {
     onDownPosition: THREE.Vector2 = new THREE.Vector2(0, 0)
     onUpPosition: THREE.Vector2 = new THREE.Vector2(0, 0)
     raycaster: Raycaster
+    transformController: TransformController
 
     constructor(public domElement: HTMLElement)
     {
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 1000 );
+        this.camera.position.set( 5, 5, 10 );
+
         this.renderer = new THREE.WebGLRenderer({ canvas: domElement, antialias: true });
         this.mouse = new THREE.Vector2(-1000, -1000);
         this.raycaster = new Raycaster(this.renderer, this.scene, this.mouse, this.camera);
+        const controls = new Controls(this.camera, this.domElement);
+        this.transformController = new TransformController(this.camera, this.domElement, controls.controls)
         this.initCanvas();
         this.animate();
-        // @ts-ignore:next-line
-        const controls = new Controls(this.camera, this.domElement)
     }
 
     static createFromId(domElementId: string) : BeamOsEditor {
@@ -46,7 +50,8 @@ export class BeamOsEditor {
         const cube = new THREE.Mesh( geometry, material );
         this.scene.add( cube );
 
-        this.camera.position.set( 5, 5, 10 );
+        this.transformController.transformControl.attach(cube);
+        this.scene.add(this.transformController.transformControl)
 
         const grid = new THREE.Group();
 

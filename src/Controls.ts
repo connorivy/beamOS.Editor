@@ -3,10 +3,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { MapControls } from 'three/addons/controls/MapControls.js'
 
 export class Controls {
-    constructor(private camera: THREE.Camera, private domElement: HTMLElement) {
-        const controls = this.useOrbitControls(camera, domElement);
+    public controls: OrbitControls
+    constructor(camera: THREE.Camera, domElement: HTMLElement) {
+        this.controls = this.useOrbitControls(camera, domElement);
 
-        controls.update();
+        //controls.update() must be called after any manual changes to the camera's transform
+        this.controls.update();
     }
 
     useRevitControls(camera: THREE.Camera, domElement: HTMLElement) : MapControls {
@@ -20,5 +22,10 @@ export class Controls {
 
     useOrbitControls(camera: THREE.Camera, domElement: HTMLElement) : OrbitControls {
         return new OrbitControls( camera, domElement );
+    }
+
+    onDraggingChanged( event: DragEvent ) {
+        console.log(event)
+        // this.controls.enabled = event.
     }
 }
