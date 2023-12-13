@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import { NodeResponse } from './PhysicalModel.Contracts/NodeResponse'
 import { Raycaster } from './Raycaster';
 import { Controls } from './Controls';
 import { TransformController } from './TransformController';
 import { Selector, SelectorInfo } from './Selector';
+import { Commands } from './Commands/Commands';
 
 export class BeamOsEditor {
     scene: THREE.Scene
@@ -13,6 +13,7 @@ export class BeamOsEditor {
     raycaster: Raycaster
     transformController: TransformController
     selector: Selector;
+    public commands: Commands
 
     constructor(public domElement: HTMLElement)
     {
@@ -33,7 +34,9 @@ export class BeamOsEditor {
             this.mouse, 
             this.raycaster.raycastInfo, 
             selectorInfo,
-            this.transformController)
+            this.transformController);
+        
+        this.commands = new Commands(this.scene)
 
         this.initCanvas();
         this.animate();
@@ -101,22 +104,6 @@ export class BeamOsEditor {
 
     public sayHello() {
         console.log("hello :)");
-    }
-
-    public addNode(nodeResponse: NodeResponse) {
-        const geometry = new THREE.SphereGeometry(1);
-		const mesh = new THREE.Mesh( geometry, new THREE.MeshStandardMaterial() );
-        mesh.position.set(
-            nodeResponse.locationPoint.xCoordinate.value, 
-            nodeResponse.locationPoint.yCoordinate.value, 
-            nodeResponse.locationPoint.zCoordinate.value)
-		mesh.name = 'Box';
-
-        this.addObject(mesh);
-    }
-
-    addObject(mesh: THREE.Mesh) {
-        this.scene.add(mesh);
     }
 
     public animate() {
