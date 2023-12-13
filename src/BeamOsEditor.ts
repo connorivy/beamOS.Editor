@@ -2,6 +2,12 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { NodeResponse } from './PhysicalModel.Contracts/NodeResponse'
 
+export class IntersectedMeshProperties {
+    constructor(public id: number, public colorHex : number ) {
+
+    }
+}
+
 export class BeamOsEditor {
     scene: THREE.Scene
     camera: THREE.PerspectiveCamera
@@ -10,6 +16,9 @@ export class BeamOsEditor {
     mouse: THREE.Vector2
     onDownPosition: THREE.Vector2 = new THREE.Vector2(0, 0)
     onUpPosition: THREE.Vector2 = new THREE.Vector2(0, 0)
+    intersected?: IntersectedMeshProperties
+    tabIndex: number = 0
+
 
     constructor(public domElement: HTMLElement)
     {
@@ -17,7 +26,7 @@ export class BeamOsEditor {
         this.camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 1000 );
         this.renderer = new THREE.WebGLRenderer({ canvas: domElement, antialias: true });
         this.raycaster = new THREE.Raycaster();
-        this.mouse = new THREE.Vector2(undefined, undefined);
+        this.mouse = new THREE.Vector2(-1000, -1000);
         this.initCanvas();
         this.animate();
     }
@@ -39,7 +48,7 @@ export class BeamOsEditor {
         // this.renderer.setSize( window.innerWidth, window.innerHeight );
 
         const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-        const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+        const material = new THREE.MeshStandardMaterial( { color: 0x00ff00 } );
         const cube = new THREE.Mesh( geometry, material );
         this.scene.add( cube );
 
@@ -139,14 +148,37 @@ export class BeamOsEditor {
     }
 
     raycast() {
-        // update the picking ray with the camera and pointer position
         this.raycaster.setFromCamera( this.mouse, this.camera );
 
         // calculate objects intersecting the picking ray
-        const intersects = this.raycaster.intersectObjects( this.scene.children );
+        const intersects = this.raycaster.intersectObjects( this.scene.children )
+            .filter(o => !(o.object instanceof THREE.GridHelper))
+            .map(o => o.object as THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>)
 
-        for ( let i = 0; i < intersects.length; i ++ ) {
-            ((intersects[ i ].object as THREE.Mesh).material as THREE.MeshStandardMaterial).color.set( 0xff0000 );
+        if ( intersects.length > 0 ) {
+            this.tabIndex = intersects.length >= this.tabIndex 
+            ? 0
+            : this.tabIndex;
+            const intersectedObj = intersects[this.tabIndex];
+
+            if (this.intersected && this.intersected.id == intersectedObj.id) {
+                return;
+            }
+
+            this.intersected = new IntersectedMeshProperties(
+                intersectedObj.id, 
+                intersectedObj.material.emissive.getHex())
+            
+            intersectedObj.material.emissive.setHex(0xff0000);
+        }
+        else {
+
+            if ( this.intersected ) {
+                const sceneObj = this.scene.getObjectById(this.intersected.id) as THREE.Mesh
+                (sceneObj.material as THREE.MeshStandardMaterial).emissive.setHex(this.intersected.colorHex)
+            }
+
+            this.intersected = undefined;
         }
     }
 
