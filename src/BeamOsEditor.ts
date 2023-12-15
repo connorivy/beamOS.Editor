@@ -3,7 +3,7 @@ import { Raycaster } from './Raycaster';
 import { Controls } from './Controls';
 import { TransformController } from './TransformController';
 import { Selector, SelectorInfo } from './Selector';
-import { Commands } from './Commands/Commands';
+import { EditorApi } from './EditorApi';
 
 export class BeamOsEditor {
     scene: THREE.Scene
@@ -13,7 +13,7 @@ export class BeamOsEditor {
     raycaster: Raycaster
     transformController: TransformController
     selector: Selector;
-    public commands: Commands
+    public api: EditorApi
 
     constructor(public domElement: HTMLElement)
     {
@@ -36,7 +36,7 @@ export class BeamOsEditor {
             selectorInfo,
             this.transformController);
         
-        this.commands = new Commands(this.scene)
+        this.api = new EditorApi(this.scene)
 
         this.initCanvas();
         this.animate();
