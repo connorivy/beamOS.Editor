@@ -4,15 +4,20 @@ import { Controls } from './Controls';
 import { TransformController } from './TransformController';
 import { Selector, SelectorInfo } from './Selector';
 import { EditorApi } from './EditorApi';
+import { Line2 } from 'three/addons/lines/Line2.js';
+import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
+import { SimpleGui } from './SimpleGui';
+import { EditorConfigurations } from './EditorConfigurations';
 
 export class BeamOsEditor {
-    scene: THREE.Scene
+    public scene: THREE.Scene
     camera: THREE.PerspectiveCamera
     renderer: THREE.WebGLRenderer
     mouse: THREE.Vector2
     raycaster: Raycaster
     transformController: TransformController
     selector: Selector;
+    editorConfigurations: EditorConfigurations;
     public api: EditorApi
 
     constructor(public domElement: HTMLElement)
@@ -36,9 +41,14 @@ export class BeamOsEditor {
             selectorInfo,
             this.transformController);
         
-        this.api = new EditorApi(this.scene)
+        this.editorConfigurations = new EditorConfigurations();
+
+        this.api = new EditorApi(this.scene, this.editorConfigurations);
 
         this.initCanvas();
+        // this.initGui();
+        let simpleGui = new SimpleGui(this.editorConfigurations, this.scene, this.api);
+        console.log(simpleGui);
         this.animate();
     }
 
@@ -77,6 +87,17 @@ export class BeamOsEditor {
 
         this.scene.add(grid)
 
+        let positions = [-10, -10, 0, 10, 10, 10];
+
+        const lineGeometry = new LineGeometry();
+	    lineGeometry.setPositions( positions );
+        // lineGeometry.setColors( colors );
+
+        let line = new Line2( lineGeometry, this.editorConfigurations.defaultElement1dMaterial );
+        line.computeLineDistances();
+        line.scale.set( 1, 1, 1 );
+        this.scene.add( line );
+
         // const box = new THREE.Box3();
         // const selectionBox = new THREE.Box3Helper(box);
         // this.scene.add(selectionBox);
@@ -98,7 +119,8 @@ export class BeamOsEditor {
             this.camera.updateProjectionMatrix();
 
             // set matLine resolution
-            // lineMat.resolution.set( width, height );  
+            this.editorConfigurations.defaultElement1dMaterial.resolution.set( width, height );
+
         }
     }
 
