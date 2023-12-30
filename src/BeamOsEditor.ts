@@ -4,8 +4,8 @@ import { Controls } from './Controls';
 import { TransformController } from './TransformController';
 import { Selector, SelectorInfo } from './Selector';
 import { EditorApi } from './EditorApi';
-import { Line2 } from 'three/addons/lines/Line2.js';
-import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
+// import { Line2 } from 'three/addons/lines/Line2.js';
+// import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
 import { SimpleGui } from './SimpleGui';
 import { EditorConfigurations } from './EditorConfigurations';
 
@@ -68,40 +68,36 @@ export class BeamOsEditor {
         window.dispatchEvent(new Event("resize"));
         // this.renderer.setSize( window.innerWidth, window.innerHeight );
 
-        const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-        const material = new THREE.MeshStandardMaterial( { color: 0x00ff00 } );
-        const cube = new THREE.Mesh( geometry, material );
-        this.scene.add( cube );
-
+        
         const grid = new THREE.Group();
-
+        
         const grid1 = new THREE.GridHelper( 30, 30, 0x282828 );
         grid1.material.color.setHex( 0x282828 );
         grid1.material.vertexColors = false;
         grid.add( grid1 );
-
+        
         const grid2 = new THREE.GridHelper( 30, 6, 0x888888  );
         grid2.material.color.setHex( 0x888888  );
         grid2.material.vertexColors = false;
         grid.add( grid2 );
-
+        
         this.scene.add(grid)
+        
+        // // add cube
+        // const geometry = new THREE.BoxGeometry( 1, 1, 1 );
+        // const material = new THREE.MeshStandardMaterial( { color: 0x00ff00 } );
+        // const cube = new THREE.Mesh( geometry, material );
+        // this.scene.add( cube );
 
-        let positions = [-10, -10, 0, 10, 10, 10];
-
-        const lineGeometry = new LineGeometry();
-	    lineGeometry.setPositions( positions );
-        // lineGeometry.setColors( colors );
-
-        let line = new Line2( lineGeometry, this.editorConfigurations.defaultElement1dMaterial );
-        line.computeLineDistances();
-        line.scale.set( 1, 1, 1 );
-        this.scene.add( line );
-
-        // const box = new THREE.Box3();
-        // const selectionBox = new THREE.Box3Helper(box);
-        // this.scene.add(selectionBox);
-        // selectionBox.box.setFromObject(cube);
+        // // add line
+        // let positions = [-10, -10, 0, 10, 10, 10];
+        // const lineGeometry = new LineGeometry();
+	    // lineGeometry.setPositions( positions );
+        
+        // let line = new Line2( lineGeometry, this.editorConfigurations.defaultElement1dMaterial );
+        // line.computeLineDistances();
+        // line.scale.set( 1, 1, 1 );
+        // this.scene.add( line );
     }
 
     resizeCanvasToDisplaySize( _event: Event ) {
