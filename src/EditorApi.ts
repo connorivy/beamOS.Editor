@@ -1,47 +1,64 @@
 import * as THREE from 'three'
-import { CreateElement1DRequest, CreateModelRequest, CreateNodeRequest, CreatePointLoadRequest, Element1DResponse, IPhysicalModelAlphaClient, ModelResponse, NodeResponse, PointLoadResponse } from "./PhysicalModelClient/PhysicalModelAlphaClient";
+import { BeamOsMesh } from './BeamOsMesh';
+import { Element1DResponse, IEditorApiAlpha, ModelResponseHydrated, NodeResponse } from './EditorApi/EditorApiAlpha';
+import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
+import { Line2 } from 'three/examples/jsm/lines/Line2.js';
+import { EditorConfigurations } from './EditorConfigurations';
 
-export class EditorApi implements IPhysicalModelAlphaClient {
+export class EditorApi implements IEditorApiAlpha {
 
-    constructor(public scene: THREE.Scene) {
+    constructor(private scene: THREE.Scene, private config: EditorConfigurations) {
 
+    }
+
+    async createElement1d(element1DResponse: Element1DResponse): Promise<string> {
+        console.log("createElement1d", element1DResponse);
+        let startNode = this.scene.getObjectByProperty("beamOsId", element1DResponse.startNodeId) as BeamOsMesh;
+        let endNode = this.scene.getObjectByProperty("beamOsId", element1DResponse.endNodeId) as BeamOsMesh;
+        
+        const lineGeometry = new LineGeometry();
+	    lineGeometry.setPositions( [
+            startNode.position.x, 
+            startNode.position.y, 
+            startNode.position.z, 
+            endNode.position.x, 
+            endNode.position.y, 
+            endNode.position.z
+        ] );
+
+        let line = new Line2( lineGeometry, this.config.defaultElement1dMaterial );
+        line.computeLineDistances();
+        line.scale.set( 1, 1, 1 );
+        this.scene.add( line );
+        
+        return startNode.beamOsId;
+    }
+
+    async createModelHydrated(modelResponseHydrated: ModelResponseHydrated): Promise<string> {
+        console.log("createModelHydrated", modelResponseHydrated);
+        modelResponseHydrated.nodes.forEach(async node => {
+            await this.createNode(node);
+        });
+        modelResponseHydrated.element1Ds.forEach(async element1d => {
+            await this.createElement1d(element1d)
+        });
+        return "";
+    }
+    
+    async createNode(nodeResponse: NodeResponse): Promise<string> {
+        console.log("createNode", nodeResponse);
+        const geometry = new THREE.SphereGeometry(.1);
+        const mesh = new BeamOsMesh(nodeResponse.id, geometry, new THREE.MeshStandardMaterial());
+        mesh.position.set(
+            nodeResponse.locationPoint.xCoordinate.value, 
+            nodeResponse.locationPoint.yCoordinate.value, 
+            nodeResponse.locationPoint.zCoordinate.value)
+
+        this.addObject(mesh);
+        return "";
     }
 
     addObject(mesh: THREE.Mesh) {
         this.scene.add(mesh);
     }
-
-    getApiModelsElement1Ds(_modelId: string, _element1dIds: string[] | null | undefined): Promise<Element1DResponse[]> {
-        throw new Error("Method not implemented.");
-    }
-    getApiModels(_id: string, _sendEntities: boolean | null | undefined): Promise<ModelResponse> {
-        throw new Error("Method not implemented.");
-    }
-    createPointLoad(_createPointLoadRequest: CreatePointLoadRequest): Promise<PointLoadResponse> {
-        throw new Error("Method not implemented.");
-    }
-    async createNode(createNodeRequest: CreateNodeRequest): Promise<NodeResponse> {
-        const geometry = new THREE.SphereGeometry(.1);
-        const mesh = new THREE.Mesh( geometry, new THREE.MeshStandardMaterial() );
-        mesh.position.set(
-            createNodeRequest.xCoordinate, 
-            createNodeRequest.yCoordinate, 
-            createNodeRequest.zCoordinate)
-
-        this.addObject(mesh);
-        return new NodeResponse();
-    }
-    getSingleNode(_id: string | null): Promise<NodeResponse> {
-        throw new Error("Method not implemented.");
-    }
-    createModel(_createModelRequest: CreateModelRequest): Promise<ModelResponse> {
-        throw new Error("Method not implemented.");
-    }
-    createElement1d(_createElement1DRequest: CreateElement1DRequest): Promise<Element1DResponse> {
-        throw new Error("Method not implemented.");
-    }
-    getSingleElement1d(_id: string | null): Promise<Element1DResponse> {
-        throw new Error("Method not implemented.");
-    }
-
 }
