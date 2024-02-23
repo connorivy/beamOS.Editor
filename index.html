@@ -1,16 +1,19 @@
-<!DOCTYPE html>
-<html lang="en" style="height: 100%; width: 100%;">
-	<head>
-		<title>three.js editor</title>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-	</head>
-	<body style="margin: 0; height: 100%; width: 100%;">
-    	<canvas id="editor" style="height: 100%; width: 100%;"></div>
-		<script type="module">
-			import { BeamOsEditor } from './src/BeamOsEditor'
-			const editor = BeamOsEditor.createFromId("editor")
-			window.beamOsEditor = editor
-		</script>
-	</body>
+<!doctype html>
+<html lang="en" style="height: 100%; width: 100%">
+    <head>
+        <title>three.js editor</title>
+        <meta charset="utf-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+        />
+    </head>
+    <body style="margin: 0; height: 100%; width: 100%">
+        <canvas id="editor" style="height: 100%; width: 100%"></canvas>
+        <script type="module">
+            import { BeamOsEditor } from "./src/BeamOsEditor";
+            const editor = BeamOsEditor.createFromId("editor");
+            window.beamOsEditor = editor;
+        </script>
+    </body>
 </html>

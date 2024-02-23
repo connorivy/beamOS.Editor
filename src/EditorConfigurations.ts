@@ -4,16 +4,14 @@ export class EditorConfigurations {
     public defaultElement1dMaterial: LineMaterial;
 
     constructor() {
-        this.defaultElement1dMaterial = new LineMaterial( {
-
+        this.defaultElement1dMaterial = new LineMaterial({
             color: 0x00ff00,
-            linewidth: .1, // in world units with size attenuation, pixels otherwise
+            linewidth: 0.1, // in world units with size attenuation, pixels otherwise
             worldUnits: true,
             vertexColors: false,
 
             //resolution:  // to be set by renderer, eventually
             alphaToCoverage: true,
-
-        } );        
+        });
     }
 }
