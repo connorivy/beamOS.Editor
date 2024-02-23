@@ -1,1 +1,1 @@
-export { BeamOsEditor } from '../src/BeamOsEditor'
+export { BeamOsEditor } from "../src/BeamOsEditor";
