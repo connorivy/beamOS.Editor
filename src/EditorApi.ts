@@ -3,6 +3,7 @@ import { BeamOsMesh } from "./BeamOsMesh";
 import {
     Element1DResponse,
     IEditorApiAlpha,
+    ModelResponse,
     ModelResponseHydrated,
     NodeResponse,
 } from "./EditorApi/EditorApiAlpha";
@@ -11,10 +12,29 @@ import { Line2 } from "three/examples/jsm/lines/Line2.js";
 import { EditorConfigurations } from "./EditorConfigurations";
 
 export class EditorApi implements IEditorApiAlpha {
+    private currentModel: THREE.Group;
+
     constructor(
         private scene: THREE.Scene,
         private config: EditorConfigurations
-    ) {}
+    ) {
+        this.currentModel = new THREE.Group();
+        this.scene.add(this.currentModel);
+    }
+
+    async clear(): Promise<string> {
+        this.currentModel.clear();
+        return "";
+    }
+    async createModel(modelResponse: ModelResponse): Promise<string> {
+        modelResponse.nodes?.forEach(async (node) => {
+            await this.createNode(node);
+        });
+        modelResponse.element1ds?.forEach(async (element1d) => {
+            await this.createElement1d(element1d);
+        });
+        return "";
+    }
 
     async createElement1d(
         element1DResponse: Element1DResponse
@@ -45,7 +65,7 @@ export class EditorApi implements IEditorApiAlpha {
         );
         line.computeLineDistances();
         line.scale.set(1, 1, 1);
-        this.scene.add(line);
+        this.currentModel.add(line);
 
         return startNode.beamOsId;
     }
@@ -82,6 +102,6 @@ export class EditorApi implements IEditorApiAlpha {
     }
 
     addObject(mesh: THREE.Mesh) {
-        this.scene.add(mesh);
+        this.currentModel.add(mesh);
     }
 }
