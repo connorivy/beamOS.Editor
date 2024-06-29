@@ -6,10 +6,12 @@ import {
     ModelResponse,
     ModelResponseHydrated,
     NodeResponse,
+    Result,
 } from "./EditorApi/EditorApiAlpha";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
 import { Line2 } from "three/examples/jsm/lines/Line2.js";
 import { EditorConfigurations } from "./EditorConfigurations";
+import { ResultFactory } from "./EditorApi/EditorApiAlphaExtensions";
 
 export class EditorApi implements IEditorApiAlpha {
     private currentModel: THREE.Group;
@@ -22,23 +24,23 @@ export class EditorApi implements IEditorApiAlpha {
         this.scene.add(this.currentModel);
     }
 
-    async clear(): Promise<string> {
+    async clear(): Promise<Result> {
         this.currentModel.clear();
-        return "";
+        return ResultFactory.Success();
     }
-    async createModel(modelResponse: ModelResponse): Promise<string> {
+    async createModel(modelResponse: ModelResponse): Promise<Result> {
         modelResponse.nodes?.forEach(async (node) => {
             await this.createNode(node);
         });
         modelResponse.element1ds?.forEach(async (element1d) => {
             await this.createElement1d(element1d);
         });
-        return "";
+        return ResultFactory.Success();
     }
 
     async createElement1d(
         element1DResponse: Element1DResponse
-    ): Promise<string> {
+    ): Promise<Result> {
         console.log("createElement1d", element1DResponse);
         let startNode = this.scene.getObjectByProperty(
             "beamOsId",
@@ -67,12 +69,12 @@ export class EditorApi implements IEditorApiAlpha {
         line.scale.set(1, 1, 1);
         this.currentModel.add(line);
 
-        return startNode.beamOsId;
+        return ResultFactory.Success();
     }
 
     async createModelHydrated(
         modelResponseHydrated: ModelResponseHydrated
-    ): Promise<string> {
+    ): Promise<Result> {
         console.log("createModelHydrated", modelResponseHydrated);
         modelResponseHydrated.nodes.forEach(async (node) => {
             await this.createNode(node);
@@ -80,10 +82,10 @@ export class EditorApi implements IEditorApiAlpha {
         modelResponseHydrated.element1Ds.forEach(async (element1d) => {
             await this.createElement1d(element1d);
         });
-        return "";
+        return ResultFactory.Success();
     }
 
-    async createNode(nodeResponse: NodeResponse): Promise<string> {
+    async createNode(nodeResponse: NodeResponse): Promise<Result> {
         console.log("createNode", nodeResponse);
         const geometry = new THREE.SphereGeometry(0.1);
         const mesh = new BeamOsMesh(
@@ -98,7 +100,7 @@ export class EditorApi implements IEditorApiAlpha {
         );
 
         this.addObject(mesh);
-        return "";
+        return ResultFactory.Success();
     }
 
     addObject(mesh: THREE.Mesh) {

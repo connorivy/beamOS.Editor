@@ -8,6 +8,8 @@ import { EditorApi } from "./EditorApi";
 // import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
 // import { SimpleGui } from './SimpleGui';
 import { EditorConfigurations } from "./EditorConfigurations";
+import { IEditorEventsApi } from "./EditorApi/EditorEventsApi";
+import { IEditorEventsApiFactory } from "./EditorApi/EditorEventsApiProxy";
 
 export class BeamOsEditor {
     public scene: THREE.Scene;
@@ -20,7 +22,10 @@ export class BeamOsEditor {
     editorConfigurations: EditorConfigurations;
     public api: EditorApi;
 
-    constructor(public domElement: HTMLElement) {
+    constructor(
+        public domElement: HTMLElement,
+        public dispatcher: IEditorEventsApi
+    ) {
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(
             50,
@@ -49,7 +54,8 @@ export class BeamOsEditor {
             this.scene,
             this.camera,
             this.domElement,
-            controls.controls
+            controls.controls,
+            dispatcher
         );
         this.selector = new Selector(
             this.domElement,
@@ -71,14 +77,22 @@ export class BeamOsEditor {
         this.animate();
     }
 
-    static createFromId(domElementId: string): BeamOsEditor {
+    static createFromId(
+        domElementId: string,
+        dotnetRef: IEditorEventsApi
+    ): BeamOsEditor {
         const domElement = document.getElementById(domElementId);
         if (!domElement) {
             throw new Error(
                 `Unable to find dom element with id ${domElementId}`
             );
         }
-        return new this(domElement);
+
+        (<any>window).helloFunc = () => {};
+
+        let dispatcher = IEditorEventsApiFactory(dotnetRef);
+
+        return new this(domElement, dispatcher);
     }
 
     initCanvas() {
