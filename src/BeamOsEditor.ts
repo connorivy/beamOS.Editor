@@ -88,8 +88,6 @@ export class BeamOsEditor {
             );
         }
 
-        (<any>window).helloFunc = () => {};
-
         let dispatcher = IEditorEventsApiFactory(dotnetRef);
 
         return new this(domElement, dispatcher);

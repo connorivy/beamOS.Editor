@@ -13,14 +13,6 @@ export const IEditorEventsApiFactory = (dotnetRef: IEditorEventsApi) =>
                     ]);
                 };
             }
-            // let realFunc = (<any>dotnetReference).invokeMethodAsync;
-            // let funcName = GetCsMethodName(prop);
-
-            // if (realFunc[funcName] instanceof Function) {
-            //     return function (...args: any[]) {
-            //         return realFunc[funcName].apply(realFunc, args);
-            //     };
-            // }
         },
     });
 
