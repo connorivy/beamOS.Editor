@@ -34,6 +34,11 @@ export interface IEditorApiAlpha {
      * @return OK
      */
     clear(): Promise<Result>;
+
+    /**
+     * @return OK
+     */
+    nodeMovedEventEffect(body: NodeMovedEvent): Promise<Result>;
 }
 
 export class EditorApiAlpha implements IEditorApiAlpha {
@@ -246,6 +251,47 @@ export class EditorApiAlpha implements IEditorApiAlpha {
         }
         return Promise.resolve<Result>(null as any);
     }
+
+    /**
+     * @return OK
+     */
+    nodeMovedEventEffect(body: NodeMovedEvent): Promise<Result> {
+        let url_ = this.baseUrl + "/EditorApiAlpha/NodeMovedEventEffect";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processNodeMovedEventEffect(_response);
+        });
+    }
+
+    protected processNodeMovedEventEffect(response: Response): Promise<Result> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = Result.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<Result>(null as any);
+    }
 }
 
 export class BeamOsError implements IBeamOsError {
@@ -286,6 +332,50 @@ export class BeamOsError implements IBeamOsError {
 export interface IBeamOsError {
     code: string;
     description: string;
+}
+
+export class EditorLocation implements IEditorLocation {
+    xCoordinate!: number;
+    yCoordinate!: number;
+    zCoordinate!: number;
+
+    constructor(data?: IEditorLocation) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.xCoordinate = _data["xCoordinate"];
+            this.yCoordinate = _data["yCoordinate"];
+            this.zCoordinate = _data["zCoordinate"];
+        }
+    }
+
+    static fromJS(data: any): EditorLocation {
+        data = typeof data === 'object' ? data : {};
+        let result = new EditorLocation();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["xCoordinate"] = this.xCoordinate;
+        data["yCoordinate"] = this.yCoordinate;
+        data["zCoordinate"] = this.zCoordinate;
+        return data;
+    }
+}
+
+export interface IEditorLocation {
+    xCoordinate: number;
+    yCoordinate: number;
+    zCoordinate: number;
 }
 
 export class Element1DResponse implements IElement1DResponse {
@@ -740,6 +830,54 @@ export interface IMomentLoadResponse {
     nodeId: string;
     torque: UnitValueDto;
     axisDirection: Vector3;
+}
+
+export class NodeMovedEvent implements INodeMovedEvent {
+    nodeId!: string;
+    previousLocation!: EditorLocation;
+    newLocation!: EditorLocation;
+
+    constructor(data?: INodeMovedEvent) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        if (!data) {
+            this.previousLocation = new EditorLocation();
+            this.newLocation = new EditorLocation();
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.nodeId = _data["nodeId"];
+            this.previousLocation = _data["previousLocation"] ? EditorLocation.fromJS(_data["previousLocation"]) : new EditorLocation();
+            this.newLocation = _data["newLocation"] ? EditorLocation.fromJS(_data["newLocation"]) : new EditorLocation();
+        }
+    }
+
+    static fromJS(data: any): NodeMovedEvent {
+        data = typeof data === 'object' ? data : {};
+        let result = new NodeMovedEvent();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["nodeId"] = this.nodeId;
+        data["previousLocation"] = this.previousLocation ? this.previousLocation.toJSON() : <any>undefined;
+        data["newLocation"] = this.newLocation ? this.newLocation.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface INodeMovedEvent {
+    nodeId: string;
+    previousLocation: EditorLocation;
+    newLocation: EditorLocation;
 }
 
 export class NodeResponse implements INodeResponse {

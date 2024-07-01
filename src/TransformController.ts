@@ -1,10 +1,17 @@
 import * as THREE from "three";
 import { TransformControls } from "three/addons/controls/TransformControls.js";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
-import { IEditorEventsApi, NodeMovedEvent } from "./EditorApi/EditorEventsApi";
+import {
+    EditorLocation,
+    IEditorEventsApi,
+    NodeMovedEvent,
+} from "./EditorApi/EditorEventsApi";
+import { BeamOsNode } from "./SceneObjects/BeamOsNode";
 
 export class TransformController {
     public transformControl: TransformControls;
+    private startLocation: EditorLocation | undefined;
+    private node: BeamOsNode;
 
     constructor(
         scene: THREE.Scene,
@@ -16,9 +23,16 @@ export class TransformController {
         this.transformControl = new TransformControls(camera, domElement);
         scene.add(this.transformControl);
 
+        this.node = this.transformControl.object as BeamOsNode;
+
         this.transformControl.addEventListener(
             "dragging-changed",
             this.onDraggingChanged.bind(this)
+        );
+
+        this.transformControl.addEventListener(
+            "objectChange",
+            this.onObjectChanged.bind(this)
         );
     }
 
@@ -26,25 +40,33 @@ export class TransformController {
         this.controls.enabled = !event.value;
 
         if (!event.value) {
+            if (this.startLocation === undefined) {
+                throw new Error("start location is undefined");
+            }
+
             await this.dispatcher.handleNodeMovedEvent(
                 new NodeMovedEvent({
                     nodeId: event.target.object.beamOsId,
-                    xCoordinate: event.target.object.position.x,
-                    yCoordinate: event.target.object.position.y,
-                    zCoordinate: event.target.object.position.z,
+                    previousLocation: this.startLocation,
+                    newLocation: new EditorLocation({
+                        xCoordinate: event.target.object.position.x,
+                        yCoordinate: event.target.object.position.y,
+                        zCoordinate: event.target.object.position.z,
+                    }),
                 })
             );
 
-            // await (<any>this.dispatcher).invokeMethodAsync(
-            //     "handleNodeMovedEvent",
-            //     new NodeMovedEvent({
-            //         nodeId: event.target.object.beamOsId,
-            //         xCoordinate: event.target.object.position.x,
-            //         yCoordinate: event.target.object.position.y,
-            //         zCoordinate: event.target.object.position.z,
-            //     })
-            // );
-            // console.log(event.target.object.position);
+            this.startLocation = undefined;
+        } else {
+            this.startLocation = new EditorLocation({
+                xCoordinate: event.target.object.position.x,
+                yCoordinate: event.target.object.position.y,
+                zCoordinate: event.target.object.position.z,
+            });
         }
+    }
+
+    onObjectChanged(event: any) {
+        (this.transformControl.object as BeamOsNode).firePositionChangedEvent();
     }
 }
