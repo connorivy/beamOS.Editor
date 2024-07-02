@@ -2,12 +2,13 @@ import * as THREE from "three";
 import { Line2 } from "three/examples/jsm/lines/Line2.js";
 import { LineGeometry, LineMaterial } from "three/examples/jsm/Addons.js";
 import { BeamOsNode } from "./BeamOsNode";
+import { IBeamOsMesh } from "../BeamOsMesh";
 
 export interface NodeEventMap extends THREE.Object3DEventMap {
     moved: { value: THREE.Vector3 };
 }
 
-export class BeamOsElement1d extends Line2 {
+export class BeamOsElement1d extends Line2 implements IBeamOsMesh {
     private onNodeMovedFunc: (_event: any) => void;
 
     constructor(

@@ -11,7 +11,6 @@ import { BeamOsNode } from "./SceneObjects/BeamOsNode";
 export class TransformController {
     public transformControl: TransformControls;
     private startLocation: EditorLocation | undefined;
-    private node: BeamOsNode;
 
     constructor(
         scene: THREE.Scene,
@@ -22,8 +21,6 @@ export class TransformController {
     ) {
         this.transformControl = new TransformControls(camera, domElement);
         scene.add(this.transformControl);
-
-        this.node = this.transformControl.object as BeamOsNode;
 
         this.transformControl.addEventListener(
             "dragging-changed",
