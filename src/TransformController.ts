@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { TransformControls } from "three/addons/controls/TransformControls.js";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 import {
-    EditorLocation,
+    Coordinate3D,
     IEditorEventsApi,
     NodeMovedEvent,
 } from "./EditorApi/EditorEventsApi";
@@ -10,7 +10,7 @@ import { BeamOsNode } from "./SceneObjects/BeamOsNode";
 
 export class TransformController {
     public transformControl: TransformControls;
-    private startLocation: EditorLocation | undefined;
+    private startLocation: Coordinate3D | undefined;
 
     constructor(
         scene: THREE.Scene,
@@ -45,25 +45,25 @@ export class TransformController {
                 new NodeMovedEvent({
                     nodeId: event.target.object.beamOsId,
                     previousLocation: this.startLocation,
-                    newLocation: new EditorLocation({
-                        xCoordinate: event.target.object.position.x,
-                        yCoordinate: event.target.object.position.y,
-                        zCoordinate: event.target.object.position.z,
+                    newLocation: new Coordinate3D({
+                        x: event.target.object.position.x,
+                        y: event.target.object.position.y,
+                        z: event.target.object.position.z,
                     }),
                 })
             );
 
             this.startLocation = undefined;
         } else {
-            this.startLocation = new EditorLocation({
-                xCoordinate: event.target.object.position.x,
-                yCoordinate: event.target.object.position.y,
-                zCoordinate: event.target.object.position.z,
+            this.startLocation = new Coordinate3D({
+                x: event.target.object.position.x,
+                y: event.target.object.position.y,
+                z: event.target.object.position.z,
             });
         }
     }
 
-    onObjectChanged(event: any) {
+    onObjectChanged(_event: any) {
         (this.transformControl.object as BeamOsNode).firePositionChangedEvent();
     }
 }

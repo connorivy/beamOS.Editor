@@ -38,7 +38,7 @@ export interface IEditorApiAlpha {
     /**
      * @return OK
      */
-    nodeMovedEventEffect(body: NodeMovedEvent): Promise<Result>;
+    reduceNodeMovedEvent(body: NodeMovedEvent): Promise<Result>;
 }
 
 export class EditorApiAlpha implements IEditorApiAlpha {
@@ -255,8 +255,8 @@ export class EditorApiAlpha implements IEditorApiAlpha {
     /**
      * @return OK
      */
-    nodeMovedEventEffect(body: NodeMovedEvent): Promise<Result> {
-        let url_ = this.baseUrl + "/EditorApiAlpha/NodeMovedEventEffect";
+    reduceNodeMovedEvent(body: NodeMovedEvent): Promise<Result> {
+        let url_ = this.baseUrl + "/EditorApiAlpha/ReduceNodeMovedEvent";
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = JSON.stringify(body);
@@ -271,11 +271,11 @@ export class EditorApiAlpha implements IEditorApiAlpha {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processNodeMovedEventEffect(_response);
+            return this.processReduceNodeMovedEvent(_response);
         });
     }
 
-    protected processNodeMovedEventEffect(response: Response): Promise<Result> {
+    protected processReduceNodeMovedEvent(response: Response): Promise<Result> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -334,12 +334,12 @@ export interface IBeamOsError {
     description: string;
 }
 
-export class EditorLocation implements IEditorLocation {
-    xCoordinate!: number;
-    yCoordinate!: number;
-    zCoordinate!: number;
+export class Coordinate3D implements ICoordinate3D {
+    x!: number;
+    y!: number;
+    z!: number;
 
-    constructor(data?: IEditorLocation) {
+    constructor(data?: ICoordinate3D) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -350,32 +350,32 @@ export class EditorLocation implements IEditorLocation {
 
     init(_data?: any) {
         if (_data) {
-            this.xCoordinate = _data["xCoordinate"];
-            this.yCoordinate = _data["yCoordinate"];
-            this.zCoordinate = _data["zCoordinate"];
+            this.x = _data["x"];
+            this.y = _data["y"];
+            this.z = _data["z"];
         }
     }
 
-    static fromJS(data: any): EditorLocation {
+    static fromJS(data: any): Coordinate3D {
         data = typeof data === 'object' ? data : {};
-        let result = new EditorLocation();
+        let result = new Coordinate3D();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["xCoordinate"] = this.xCoordinate;
-        data["yCoordinate"] = this.yCoordinate;
-        data["zCoordinate"] = this.zCoordinate;
+        data["x"] = this.x;
+        data["y"] = this.y;
+        data["z"] = this.z;
         return data;
     }
 }
 
-export interface IEditorLocation {
-    xCoordinate: number;
-    yCoordinate: number;
-    zCoordinate: number;
+export interface ICoordinate3D {
+    x: number;
+    y: number;
+    z: number;
 }
 
 export class Element1DResponse implements IElement1DResponse {
@@ -834,8 +834,8 @@ export interface IMomentLoadResponse {
 
 export class NodeMovedEvent implements INodeMovedEvent {
     nodeId!: string;
-    previousLocation!: EditorLocation;
-    newLocation!: EditorLocation;
+    previousLocation!: Coordinate3D;
+    newLocation!: Coordinate3D;
 
     constructor(data?: INodeMovedEvent) {
         if (data) {
@@ -845,16 +845,16 @@ export class NodeMovedEvent implements INodeMovedEvent {
             }
         }
         if (!data) {
-            this.previousLocation = new EditorLocation();
-            this.newLocation = new EditorLocation();
+            this.previousLocation = new Coordinate3D();
+            this.newLocation = new Coordinate3D();
         }
     }
 
     init(_data?: any) {
         if (_data) {
             this.nodeId = _data["nodeId"];
-            this.previousLocation = _data["previousLocation"] ? EditorLocation.fromJS(_data["previousLocation"]) : new EditorLocation();
-            this.newLocation = _data["newLocation"] ? EditorLocation.fromJS(_data["newLocation"]) : new EditorLocation();
+            this.previousLocation = _data["previousLocation"] ? Coordinate3D.fromJS(_data["previousLocation"]) : new Coordinate3D();
+            this.newLocation = _data["newLocation"] ? Coordinate3D.fromJS(_data["newLocation"]) : new Coordinate3D();
         }
     }
 
@@ -876,8 +876,8 @@ export class NodeMovedEvent implements INodeMovedEvent {
 
 export interface INodeMovedEvent {
     nodeId: string;
-    previousLocation: EditorLocation;
-    newLocation: EditorLocation;
+    previousLocation: Coordinate3D;
+    newLocation: Coordinate3D;
 }
 
 export class NodeResponse implements INodeResponse {

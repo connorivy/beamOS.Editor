@@ -89,14 +89,14 @@ export class EditorApi implements IEditorApiAlpha {
         return Promise.resolve(ResultFactory.Success());
     }
 
-    nodeMovedEventEffect(body: NodeMovedEvent): Promise<Result> {
+    reduceNodeMovedEvent(body: NodeMovedEvent): Promise<Result> {
         let node = this.scene.getObjectByProperty(
             "beamOsId",
             body.nodeId
         ) as BeamOsNode;
-        node.position.x = body.newLocation.xCoordinate;
-        node.position.y = body.newLocation.yCoordinate;
-        node.position.z = body.newLocation.zCoordinate;
+        node.position.x = body.newLocation.x;
+        node.position.y = body.newLocation.y;
+        node.position.z = body.newLocation.z;
         node.firePositionChangedEvent();
 
         return Promise.resolve(ResultFactory.Success());
