@@ -1,10 +1,14 @@
 import * as THREE from "three";
 import { SelectorInfo } from "./Selector";
+import { IBeamOsMesh } from "./BeamOsMesh";
+import { LineMaterial } from "three/examples/jsm/Addons.js";
 
 export class Raycaster {
-    public raycaster: THREE.Raycaster = new THREE.Raycaster();
+    public raycaster: THREE.Raycaster;
     public tabIndex: number = 0;
     public raycastInfo: RaycastInfo;
+    private highlightHex: number = 0x6495ed;
+
     constructor(
         private renderer: THREE.Renderer,
         private scene: THREE.Scene,
@@ -12,6 +16,10 @@ export class Raycaster {
         private camera: THREE.Camera,
         private selectorInfo: SelectorInfo
     ) {
+        this.raycaster = new THREE.Raycaster();
+        this.raycaster.params.Line.threshold = 1;
+        this.raycaster.params.Line2 = { threshold: 0 };
+
         this.raycastInfo = new RaycastInfo();
         window.addEventListener("pointermove", this.onPointerMove.bind(this));
     }
@@ -28,19 +36,8 @@ export class Raycaster {
 
         const intersects = this.raycaster
             .intersectObjects(this.scene.children)
-            .filter(
-                (o) =>
-                    !(o.object instanceof THREE.GridHelper) &&
-                    o.object instanceof THREE.Mesh &&
-                    o.object.material instanceof THREE.MeshStandardMaterial
-            )
-            .map(
-                (o) =>
-                    o.object as THREE.Mesh<
-                        THREE.BufferGeometry,
-                        THREE.MeshStandardMaterial
-                    >
-            );
+            .filter((o) => this.isBeamOsMesh(o.object))
+            .map((o) => (<any>o.object) as IBeamOsMesh);
 
         if (intersects.length > 0) {
             this.tabIndex =
@@ -54,19 +51,26 @@ export class Raycaster {
                 return;
             }
 
-            if (
-                this.raycastInfo.currentlyRaycasted &&
-                this.raycastInfo.currentlyRaycasted.id == intersectedObj.id
-            ) {
-                return;
+            if (this.raycastInfo.currentlyRaycasted) {
+                if (
+                    this.raycastInfo.currentlyRaycasted.id == intersectedObj.id
+                ) {
+                    // same object is raycasted, just return
+                    return;
+                } else {
+                    // different object is raycasted, unhover original raycasted object
+                    this.unhighlightRaycasted();
+                }
             }
 
             this.raycastInfo.currentlyRaycasted = new IntersectedMeshProperties(
                 intersectedObj.id,
-                intersectedObj.material.emissive.getHex()
+                intersectedObj.material
             );
 
-            intersectedObj.material.emissive.setHex(0xff0000);
+            intersectedObj.material = this.getHoverMaterial(
+                intersectedObj.material
+            );
         } else {
             this.unhighlightRaycasted();
         }
@@ -77,11 +81,28 @@ export class Raycaster {
             const sceneObj = this.scene.getObjectById(
                 this.raycastInfo.currentlyRaycasted.id
             ) as THREE.Mesh;
-            (sceneObj.material as THREE.MeshStandardMaterial).emissive.setHex(
-                this.raycastInfo.currentlyRaycasted.colorHex
-            );
+            sceneObj.material = this.raycastInfo.currentlyRaycasted.material;
         }
         this.raycastInfo.currentlyRaycasted = undefined;
+    }
+
+    getHoverMaterial<T extends THREE.Material>(material: T): T {
+        if (material instanceof THREE.MeshStandardMaterial) {
+            let clone = material.clone() as T & THREE.MeshStandardMaterial;
+            clone.emissive.setHex(this.highlightHex);
+            return clone;
+        }
+        if (material instanceof LineMaterial) {
+            let clone = material.clone() as T & LineMaterial;
+            clone.color = new THREE.Color(this.highlightHex);
+            return clone;
+        }
+
+        return material;
+    }
+
+    isBeamOsMesh(object: any): object is IBeamOsMesh {
+        return "beamOsId" in object;
     }
 }
 
@@ -90,5 +111,5 @@ export class RaycastInfo {
 }
 
 export class IntersectedMeshProperties {
-    constructor(public id: number, public colorHex: number) {}
+    constructor(public id: number, public material: THREE.Material) {}
 }

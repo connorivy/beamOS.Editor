@@ -64,13 +64,12 @@ export class EditorEventsApi implements IEditorEventsApi {
     }
 }
 
-export class NodeMovedEvent implements INodeMovedEvent {
-    nodeId!: string;
-    xCoordinate!: number;
-    yCoordinate!: number;
-    zCoordinate!: number;
+export class Coordinate3D implements ICoordinate3D {
+    x!: number;
+    y!: number;
+    z!: number;
 
-    constructor(data?: INodeMovedEvent) {
+    constructor(data?: ICoordinate3D) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -81,10 +80,57 @@ export class NodeMovedEvent implements INodeMovedEvent {
 
     init(_data?: any) {
         if (_data) {
+            this.x = _data["x"];
+            this.y = _data["y"];
+            this.z = _data["z"];
+        }
+    }
+
+    static fromJS(data: any): Coordinate3D {
+        data = typeof data === 'object' ? data : {};
+        let result = new Coordinate3D();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["x"] = this.x;
+        data["y"] = this.y;
+        data["z"] = this.z;
+        return data;
+    }
+}
+
+export interface ICoordinate3D {
+    x: number;
+    y: number;
+    z: number;
+}
+
+export class NodeMovedEvent implements INodeMovedEvent {
+    nodeId!: string;
+    previousLocation!: Coordinate3D;
+    newLocation!: Coordinate3D;
+
+    constructor(data?: INodeMovedEvent) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        if (!data) {
+            this.previousLocation = new Coordinate3D();
+            this.newLocation = new Coordinate3D();
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
             this.nodeId = _data["nodeId"];
-            this.xCoordinate = _data["xCoordinate"];
-            this.yCoordinate = _data["yCoordinate"];
-            this.zCoordinate = _data["zCoordinate"];
+            this.previousLocation = _data["previousLocation"] ? Coordinate3D.fromJS(_data["previousLocation"]) : new Coordinate3D();
+            this.newLocation = _data["newLocation"] ? Coordinate3D.fromJS(_data["newLocation"]) : new Coordinate3D();
         }
     }
 
@@ -98,18 +144,16 @@ export class NodeMovedEvent implements INodeMovedEvent {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["nodeId"] = this.nodeId;
-        data["xCoordinate"] = this.xCoordinate;
-        data["yCoordinate"] = this.yCoordinate;
-        data["zCoordinate"] = this.zCoordinate;
+        data["previousLocation"] = this.previousLocation ? this.previousLocation.toJSON() : <any>undefined;
+        data["newLocation"] = this.newLocation ? this.newLocation.toJSON() : <any>undefined;
         return data;
     }
 }
 
 export interface INodeMovedEvent {
     nodeId: string;
-    xCoordinate: number;
-    yCoordinate: number;
-    zCoordinate: number;
+    previousLocation: Coordinate3D;
+    newLocation: Coordinate3D;
 }
 
 export class ApiException extends Error {

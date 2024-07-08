@@ -1,17 +1,17 @@
 import * as THREE from "three";
-import { BeamOsMesh } from "./BeamOsMesh";
 import {
     Element1DResponse,
     IEditorApiAlpha,
     ModelResponse,
     ModelResponseHydrated,
+    NodeMovedEvent,
     NodeResponse,
     Result,
 } from "./EditorApi/EditorApiAlpha";
-import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
-import { Line2 } from "three/examples/jsm/lines/Line2.js";
 import { EditorConfigurations } from "./EditorConfigurations";
 import { ResultFactory } from "./EditorApi/EditorApiAlphaExtensions";
+import { BeamOsNode } from "./SceneObjects/BeamOsNode";
+import { BeamOsElement1d } from "./SceneObjects/BeamOsElement1d";
 
 export class EditorApi implements IEditorApiAlpha {
     private currentModel: THREE.Group;
@@ -45,29 +45,20 @@ export class EditorApi implements IEditorApiAlpha {
         let startNode = this.scene.getObjectByProperty(
             "beamOsId",
             element1DResponse.startNodeId
-        ) as BeamOsMesh;
+        ) as BeamOsNode;
         let endNode = this.scene.getObjectByProperty(
             "beamOsId",
             element1DResponse.endNodeId
-        ) as BeamOsMesh;
+        ) as BeamOsNode;
 
-        const lineGeometry = new LineGeometry();
-        lineGeometry.setPositions([
-            startNode.position.x,
-            startNode.position.y,
-            startNode.position.z,
-            endNode.position.x,
-            endNode.position.y,
-            endNode.position.z,
-        ]);
-
-        let line = new Line2(
-            lineGeometry,
+        let el = new BeamOsElement1d(
+            element1DResponse.id,
+            startNode,
+            endNode,
             this.config.defaultElement1dMaterial
         );
-        line.computeLineDistances();
-        line.scale.set(1, 1, 1);
-        this.currentModel.add(line);
+
+        this.currentModel.add(el);
 
         return ResultFactory.Success();
     }
@@ -85,22 +76,30 @@ export class EditorApi implements IEditorApiAlpha {
         return ResultFactory.Success();
     }
 
-    async createNode(nodeResponse: NodeResponse): Promise<Result> {
+    createNode(nodeResponse: NodeResponse): Promise<Result> {
         console.log("createNode", nodeResponse);
-        const geometry = new THREE.SphereGeometry(0.1);
-        const mesh = new BeamOsMesh(
+        const node = new BeamOsNode(
             nodeResponse.id,
-            geometry,
-            new THREE.MeshStandardMaterial()
-        );
-        mesh.position.set(
             nodeResponse.locationPoint.xCoordinate.value,
             nodeResponse.locationPoint.yCoordinate.value,
             nodeResponse.locationPoint.zCoordinate.value
         );
 
-        this.addObject(mesh);
-        return ResultFactory.Success();
+        this.addObject(node);
+        return Promise.resolve(ResultFactory.Success());
+    }
+
+    reduceNodeMovedEvent(body: NodeMovedEvent): Promise<Result> {
+        let node = this.scene.getObjectByProperty(
+            "beamOsId",
+            body.nodeId
+        ) as BeamOsNode;
+        node.position.x = body.newLocation.x;
+        node.position.y = body.newLocation.y;
+        node.position.z = body.newLocation.z;
+        node.firePositionChangedEvent();
+
+        return Promise.resolve(ResultFactory.Success());
     }
 
     addObject(mesh: THREE.Mesh) {
