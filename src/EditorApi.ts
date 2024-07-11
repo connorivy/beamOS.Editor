@@ -1,10 +1,11 @@
 import * as THREE from "three";
 import {
+    ChangeSelectionCommand,
     Element1DResponse,
     IEditorApiAlpha,
     ModelResponse,
     ModelResponseHydrated,
-    NodeMovedEvent,
+    MoveNodeCommand,
     NodeResponse,
     Result,
 } from "./EditorApi/EditorApiAlpha";
@@ -82,14 +83,21 @@ export class EditorApi implements IEditorApiAlpha {
             nodeResponse.id,
             nodeResponse.locationPoint.xCoordinate.value,
             nodeResponse.locationPoint.yCoordinate.value,
-            nodeResponse.locationPoint.zCoordinate.value
+            nodeResponse.locationPoint.zCoordinate.value,
+            nodeResponse.restraint
         );
 
         this.addObject(node);
         return Promise.resolve(ResultFactory.Success());
     }
 
-    reduceNodeMovedEvent(body: NodeMovedEvent): Promise<Result> {
+    reduceChangeSelectionCommand(
+        body: ChangeSelectionCommand
+    ): Promise<Result> {
+        throw new Error("Method not implemented.");
+    }
+
+    reduceMoveNodeCommand(body: MoveNodeCommand): Promise<Result> {
         let node = this.scene.getObjectByProperty(
             "beamOsId",
             body.nodeId

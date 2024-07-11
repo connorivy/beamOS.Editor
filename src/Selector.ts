@@ -1,6 +1,12 @@
 import * as THREE from "three";
-import { RaycastInfo } from "./Raycaster";
+import { RaycastInfo, isBeamOsMesh } from "./Raycaster";
 import { TransformController } from "./TransformController";
+import { IBeamOsMesh } from "./BeamOsMesh";
+import {
+    ChangeSelectionCommand,
+    IEditorEventsApi,
+    SelectedObject,
+} from "./EditorApi/EditorEventsApi";
 
 export class Selector {
     private selectionBox: THREE.Box3Helper;
@@ -20,7 +26,7 @@ export class Selector {
         this.selectionBox = new THREE.Box3Helper(box);
         this.scene.add(this.selectionBox);
         this.onMouseUpFunc = this.onMouseUp.bind(this);
-        this.selectHighlightedObject();
+        this.selectClickedObject();
 
         window.addEventListener("mousedown", this.onMouseDown.bind(this));
     }
@@ -38,48 +44,47 @@ export class Selector {
     onMouseUp(_event: MouseEvent) {
         this.onUpPosition = this.mouse.clone();
 
-        this.handleClick();
+        if (this.onDownPosition.distanceTo(this.onUpPosition) === 0) {
+            this.handleClick();
+        }
 
         document.removeEventListener("mouseup", this.onMouseUpFunc);
     }
 
-    selectHighlightedObject() {
+    selectClickedObject() {
         if (this.raycastInfo.currentlyRaycasted) {
-            this.selectorInfo.currentlySelected = this.scene.getObjectById(
+            const raycastedMesh = this.scene.getObjectById(
                 this.raycastInfo.currentlyRaycasted.id
             );
-            if (!this.selectorInfo.currentlySelected) {
+            if (!isBeamOsMesh(raycastedMesh)) {
                 throw new Error(
                     `Unable to get object with id ${this.raycastInfo.currentlyRaycasted.id} from scene`
                 );
             }
+            this.selectorInfo.currentSelection = [raycastedMesh];
             this.selectionBox.visible = true;
-            this.transformController.transformControl.attach(
-                this.selectorInfo.currentlySelected
-            );
-            this.selectionBox.box.setFromObject(
-                this.selectorInfo.currentlySelected
-            );
+            this.transformController.transformControl.attach(raycastedMesh);
+            this.selectionBox.box.setFromObject(raycastedMesh);
         } else {
             this.transformController.transformControl.detach();
             this.selectionBox.visible = false;
-            this.selectorInfo.currentlySelected = undefined;
+            this.selectorInfo.currentSelection = [];
         }
     }
 
     handleClick() {
-        if (this.onDownPosition.distanceTo(this.onUpPosition) !== 0) {
-            return;
-        }
+        this.selectClickedObject();
+    }
 
-        this.selectHighlightedObject();
+    handleDrag() {
+        // todo
     }
 
     animate() {
         // selection box should reflect current animation state
-        if (this.selectorInfo.currentlySelected) {
+        if (this.selectorInfo.currentSelection.length > 0) {
             this.selectionBox.box.setFromObject(
-                this.selectorInfo.currentlySelected,
+                (<any>this.selectorInfo.currentSelection[0]) as THREE.Object3D,
                 true
             );
         }
@@ -87,5 +92,29 @@ export class Selector {
 }
 
 export class SelectorInfo {
-    public currentlySelected?: THREE.Object3D;
+    private _currentSelection: IBeamOsMesh[] = [];
+
+    constructor(
+        private dispatcher: IEditorEventsApi,
+        private canvasId: string
+    ) {}
+
+    public get currentSelection(): IBeamOsMesh[] {
+        return this._currentSelection;
+    }
+    public set currentSelection(value: IBeamOsMesh[]) {
+        this.dispatcher.dispatchChangeSelectionCommand(
+            new ChangeSelectionCommand({
+                canvasId: this.canvasId,
+                selectedObjects: value.map(
+                    (m) =>
+                        new SelectedObject({
+                            id: m.beamOsId,
+                            typeName: m.beamOsObjectType,
+                        })
+                ),
+            })
+        );
+        this._currentSelection = value;
+    }
 }

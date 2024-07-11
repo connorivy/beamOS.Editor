@@ -27,6 +27,20 @@ export class BeamOsEditor {
         public dispatcher: IEditorEventsApi
     ) {
         this.scene = new THREE.Scene();
+        this.scene.add(new THREE.AmbientLight(0xaaaaaa));
+
+        const light = new THREE.SpotLight(0xffffff, 10000);
+        light.position.set(0, 25, 50);
+        light.angle = Math.PI / 5;
+
+        light.castShadow = true;
+        light.shadow.camera.near = 10;
+        light.shadow.camera.far = 100;
+        light.shadow.mapSize.width = 1024;
+        light.shadow.mapSize.height = 1024;
+
+        this.scene.add(light);
+
         this.camera = new THREE.PerspectiveCamera(
             50,
             window.innerWidth / window.innerHeight,
@@ -35,7 +49,7 @@ export class BeamOsEditor {
         );
         this.camera.position.set(5, 5, 10);
 
-        const selectorInfo = new SelectorInfo();
+        const selectorInfo = new SelectorInfo(dispatcher, domElement.id);
 
         this.renderer = new THREE.WebGLRenderer({
             canvas: domElement,
@@ -46,8 +60,7 @@ export class BeamOsEditor {
             this.renderer,
             this.scene,
             this.mouse,
-            this.camera,
-            selectorInfo
+            this.camera
         );
         const controls = new Controls(this.camera, this.domElement);
         this.transformController = new TransformController(

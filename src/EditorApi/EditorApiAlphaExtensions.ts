@@ -1,4 +1,4 @@
-import { BeamOsError, Result } from "./EditorApiAlpha";
+import { BeamOsError, RestraintResponse, Result } from "./EditorApiAlpha";
 
 export class BeamOsErrorFactory {
     static None(): BeamOsError {
@@ -23,4 +23,37 @@ export class ResultFactory {
             error: error,
         });
     }
+}
+
+export class RestraintResponseUtils {
+    static GetRestraintType(restraint: RestraintResponse): RestraintType {
+        if (
+            !restraint.canTranslateAlongX &&
+            !restraint.canTranslateAlongY &&
+            !restraint.canTranslateAlongZ &&
+            restraint.canRotateAboutX &&
+            restraint.canRotateAboutY &&
+            restraint.canRotateAboutZ
+        ) {
+            return RestraintType.Pinned;
+        } else if (
+            !restraint.canTranslateAlongX &&
+            !restraint.canTranslateAlongY &&
+            !restraint.canTranslateAlongZ &&
+            !restraint.canRotateAboutX &&
+            !restraint.canRotateAboutY &&
+            !restraint.canRotateAboutZ
+        ) {
+            return RestraintType.Fixed;
+        } else {
+            return RestraintType.Other;
+        }
+    }
+}
+
+export enum RestraintType {
+    Undefined = 0,
+    Pinned = 1,
+    Fixed = 2,
+    Other = 3,
 }

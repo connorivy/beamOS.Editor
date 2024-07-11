@@ -9,6 +9,7 @@ export interface NodeEventMap extends THREE.Object3DEventMap {
 }
 
 export class BeamOsElement1d extends Line2 implements IBeamOsMesh {
+    public beamOsObjectType: string = "Element1d";
     private onNodeMovedFunc: (_event: any) => void;
 
     constructor(

@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { SelectorInfo } from "./Selector";
 import { IBeamOsMesh } from "./BeamOsMesh";
 import { LineMaterial } from "three/examples/jsm/Addons.js";
 
@@ -13,8 +12,7 @@ export class Raycaster {
         private renderer: THREE.Renderer,
         private scene: THREE.Scene,
         private mouse: THREE.Vector2,
-        private camera: THREE.Camera,
-        private selectorInfo: SelectorInfo
+        private camera: THREE.Camera
     ) {
         this.raycaster = new THREE.Raycaster();
         this.raycaster.params.Line.threshold = 1;
@@ -36,7 +34,7 @@ export class Raycaster {
 
         const intersects = this.raycaster
             .intersectObjects(this.scene.children)
-            .filter((o) => this.isBeamOsMesh(o.object))
+            .filter((o) => isBeamOsMesh(o.object))
             .map((o) => (<any>o.object) as IBeamOsMesh);
 
         if (intersects.length > 0) {
@@ -44,12 +42,12 @@ export class Raycaster {
                 intersects.length >= this.tabIndex ? 0 : this.tabIndex;
             const intersectedObj = intersects[this.tabIndex];
 
-            if (this.selectorInfo.currentlySelected?.id == intersectedObj.id) {
-                if (this.raycastInfo.currentlyRaycasted) {
-                    this.unhighlightRaycasted();
-                }
-                return;
-            }
+            // if (this.selectorInfo.currentlySelected?.id == intersectedObj.id) {
+            //     if (this.raycastInfo.currentlyRaycasted) {
+            //         this.unhighlightRaycasted();
+            //     }
+            //     return;
+            // }
 
             if (this.raycastInfo.currentlyRaycasted) {
                 if (
@@ -97,13 +95,18 @@ export class Raycaster {
             clone.color = new THREE.Color(this.highlightHex);
             return clone;
         }
+        if (material instanceof THREE.MeshLambertMaterial) {
+            let clone = material.clone() as T & LineMaterial;
+            clone.color = new THREE.Color(this.highlightHex);
+            return clone;
+        }
 
         return material;
     }
+}
 
-    isBeamOsMesh(object: any): object is IBeamOsMesh {
-        return "beamOsId" in object;
-    }
+export function isBeamOsMesh(object: any): object is IBeamOsMesh {
+    return "beamOsId" in object;
 }
 
 export class RaycastInfo {
