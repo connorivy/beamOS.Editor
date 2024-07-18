@@ -7,6 +7,7 @@ import {
     IEditorEventsApi,
     SelectedObject,
 } from "./EditorApi/EditorEventsApi";
+import { EditorConfigurations } from "./EditorConfigurations";
 
 export class Selector {
     private selectionBox: THREE.Box3Helper;
@@ -20,7 +21,8 @@ export class Selector {
         private mouse: THREE.Vector2,
         private raycastInfo: RaycastInfo,
         private selectorInfo: SelectorInfo,
-        private transformController: TransformController
+        private transformController: TransformController,
+        private editorConfigurations: EditorConfigurations
     ) {
         const box = new THREE.Box3();
         this.selectionBox = new THREE.Box3Helper(box);
@@ -63,10 +65,15 @@ export class Selector {
             }
             this.selectorInfo.currentSelection = [raycastedMesh];
             this.selectionBox.visible = true;
-            this.transformController.transformControl.attach(raycastedMesh);
+
+            if (!this.editorConfigurations.isReadOnly) {
+                this.transformController.transformControl.attach(raycastedMesh);
+            }
             this.selectionBox.box.setFromObject(raycastedMesh);
         } else {
-            this.transformController.transformControl.detach();
+            if (!this.editorConfigurations.isReadOnly) {
+                this.transformController.transformControl.detach();
+            }
             this.selectionBox.visible = false;
             this.selectorInfo.currentSelection = [];
         }
@@ -95,7 +102,7 @@ export class SelectorInfo {
     private _currentSelection: IBeamOsMesh[] = [];
 
     constructor(
-        private dispatcher: IEditorEventsApi,
+        private dotnetDispatcherApi: IEditorEventsApi,
         private canvasId: string
     ) {}
 
@@ -103,7 +110,7 @@ export class SelectorInfo {
         return this._currentSelection;
     }
     public set currentSelection(value: IBeamOsMesh[]) {
-        this.dispatcher.dispatchChangeSelectionCommand(
+        this.dotnetDispatcherApi.dispatchChangeSelectionCommand(
             new ChangeSelectionCommand({
                 canvasId: this.canvasId,
                 selectedObjects: value.map(

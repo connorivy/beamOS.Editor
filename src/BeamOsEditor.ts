@@ -9,7 +9,7 @@ import { EditorApi } from "./EditorApi";
 // import { SimpleGui } from './SimpleGui';
 import { EditorConfigurations } from "./EditorConfigurations";
 import { IEditorEventsApi } from "./EditorApi/EditorEventsApi";
-import { IEditorEventsApiFactory } from "./EditorApi/EditorEventsApiProxy";
+import { DotnetApiFactory } from "./EditorApi/DotnetApiFactory";
 
 export class BeamOsEditor {
     public scene: THREE.Scene;
@@ -19,12 +19,12 @@ export class BeamOsEditor {
     raycaster: Raycaster;
     transformController: TransformController;
     selector: Selector;
-    editorConfigurations: EditorConfigurations;
     public api: EditorApi;
 
     constructor(
         public domElement: HTMLElement,
-        public dispatcher: IEditorEventsApi
+        public dotnetDispatcherApi: IEditorEventsApi,
+        private editorConfigurations: EditorConfigurations
     ) {
         this.scene = new THREE.Scene();
         this.scene.add(new THREE.AmbientLight(0xaaaaaa));
@@ -49,7 +49,10 @@ export class BeamOsEditor {
         );
         this.camera.position.set(5, 5, 10);
 
-        const selectorInfo = new SelectorInfo(dispatcher, domElement.id);
+        const selectorInfo = new SelectorInfo(
+            dotnetDispatcherApi,
+            domElement.id
+        );
 
         this.renderer = new THREE.WebGLRenderer({
             canvas: domElement,
@@ -68,7 +71,7 @@ export class BeamOsEditor {
             this.camera,
             this.domElement,
             controls.controls,
-            dispatcher
+            dotnetDispatcherApi
         );
         this.selector = new Selector(
             this.domElement,
@@ -76,12 +79,11 @@ export class BeamOsEditor {
             this.mouse,
             this.raycaster.raycastInfo,
             selectorInfo,
-            this.transformController
+            this.transformController,
+            editorConfigurations
         );
 
-        this.editorConfigurations = new EditorConfigurations();
-
-        this.api = new EditorApi(this.scene, this.editorConfigurations);
+        this.api = new EditorApi(this.scene, editorConfigurations);
 
         this.initCanvas();
         // this.initGui();
@@ -92,7 +94,8 @@ export class BeamOsEditor {
 
     static createFromId(
         domElementId: string,
-        dotnetRef: IEditorEventsApi
+        eventsApiDotnetRef: any,
+        isReadOnly: boolean
     ): BeamOsEditor {
         const domElement = document.getElementById(domElementId);
         if (!domElement) {
@@ -101,9 +104,11 @@ export class BeamOsEditor {
             );
         }
 
-        let dispatcher = IEditorEventsApiFactory(dotnetRef);
+        let dotnetDispatcherApi =
+            DotnetApiFactory<IEditorEventsApi>(eventsApiDotnetRef);
+        let editorConfigurations = new EditorConfigurations(isReadOnly);
 
-        return new this(domElement, dispatcher);
+        return new this(domElement, dotnetDispatcherApi, editorConfigurations);
     }
 
     initCanvas() {
@@ -151,10 +156,6 @@ export class BeamOsEditor {
                 height
             );
         }
-    }
-
-    public sayHello() {
-        console.log("hello :)");
     }
 
     public animate() {

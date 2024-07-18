@@ -17,7 +17,7 @@ export class BeamOsNode extends BeamOsMesh<
 > {
     public beamOsObjectType: string = "Node";
     private static nodeHex: number = 0x00ff00;
-    private static nodeRadius: number = 0.1;
+    public static nodeRadius: number = 0.1;
 
     constructor(
         public beamOsId: string,
