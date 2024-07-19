@@ -43,6 +43,11 @@ export interface IEditorApiAlpha {
     /**
      * @return OK
      */
+    createMomentDiagram(body: MomentDiagramResponse): Promise<Result>;
+
+    /**
+     * @return OK
+     */
     clear(): Promise<Result>;
 
     /**
@@ -295,6 +300,47 @@ export class EditorApiAlpha implements IEditorApiAlpha {
     }
 
     protected processCreateShearDiagram(response: Response): Promise<Result> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = Result.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<Result>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    createMomentDiagram(body: MomentDiagramResponse): Promise<Result> {
+        let url_ = this.baseUrl + "/EditorApiAlpha/CreateMomentDiagram";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateMomentDiagram(_response);
+        });
+    }
+
+    protected processCreateMomentDiagram(response: Response): Promise<Result> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -1030,6 +1076,74 @@ export class ModelSettingsResponse implements IModelSettingsResponse {
 
 export interface IModelSettingsResponse {
     unitSettings: UnitSettingsResponse;
+}
+
+export class MomentDiagramResponse implements IMomentDiagramResponse {
+    id!: string;
+    element1DId!: string;
+    lengthUnit!: string;
+    forceUnit!: string;
+    elementLength!: UnitValueDto;
+    intervals!: DiagramConsistantIntervalResponse[];
+
+    constructor(data?: IMomentDiagramResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        if (!data) {
+            this.elementLength = new UnitValueDto();
+            this.intervals = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.element1DId = _data["element1DId"];
+            this.lengthUnit = _data["lengthUnit"];
+            this.forceUnit = _data["forceUnit"];
+            this.elementLength = _data["elementLength"] ? UnitValueDto.fromJS(_data["elementLength"]) : new UnitValueDto();
+            if (Array.isArray(_data["intervals"])) {
+                this.intervals = [] as any;
+                for (let item of _data["intervals"])
+                    this.intervals!.push(DiagramConsistantIntervalResponse.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): MomentDiagramResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new MomentDiagramResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["element1DId"] = this.element1DId;
+        data["lengthUnit"] = this.lengthUnit;
+        data["forceUnit"] = this.forceUnit;
+        data["elementLength"] = this.elementLength ? this.elementLength.toJSON() : <any>undefined;
+        if (Array.isArray(this.intervals)) {
+            data["intervals"] = [];
+            for (let item of this.intervals)
+                data["intervals"].push(item.toJSON());
+        }
+        return data;
+    }
+}
+
+export interface IMomentDiagramResponse {
+    id: string;
+    element1DId: string;
+    lengthUnit: string;
+    forceUnit: string;
+    elementLength: UnitValueDto;
+    intervals: DiagramConsistantIntervalResponse[];
 }
 
 export class MomentLoadResponse implements IMomentLoadResponse {

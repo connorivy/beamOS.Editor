@@ -5,6 +5,7 @@ import {
     IEditorApiAlpha,
     ModelResponse,
     ModelResponseHydrated,
+    MomentDiagramResponse,
     MoveNodeCommand,
     NodeResponse,
     PointLoadResponse,
@@ -115,7 +116,23 @@ export class EditorApi implements IEditorApiAlpha {
 
     createShearDiagram(body: ShearDiagramResponse): Promise<Result> {
         const el = this.getObjectByBeamOsId<BeamOsElement1d>(body.element1DId);
-        const shearDiagramResponse = new BeamOsDiagram(body.id, body, el);
+        const shearDiagramResponse = new BeamOsDiagram(
+            body.id,
+            body.intervals,
+            el
+        );
+
+        this.addObject(shearDiagramResponse);
+        return Promise.resolve(ResultFactory.Success());
+    }
+
+    createMomentDiagram(body: MomentDiagramResponse): Promise<Result> {
+        const el = this.getObjectByBeamOsId<BeamOsElement1d>(body.element1DId);
+        const shearDiagramResponse = new BeamOsDiagram(
+            body.id,
+            body.intervals,
+            el
+        );
 
         this.addObject(shearDiagramResponse);
         return Promise.resolve(ResultFactory.Success());

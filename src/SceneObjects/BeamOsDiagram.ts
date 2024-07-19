@@ -1,6 +1,9 @@
 import * as THREE from "three";
 import { BeamOsMesh } from "../BeamOsMesh";
-import { ShearDiagramResponse } from "../EditorApi/EditorApiAlpha";
+import {
+    DiagramConsistantIntervalResponse,
+    ShearDiagramResponse,
+} from "../EditorApi/EditorApiAlpha";
 import { BeamOsElement1d } from "./BeamOsElement1d";
 
 export interface DiagramEventMap extends THREE.Object3DEventMap {
@@ -17,12 +20,12 @@ export class BeamOsDiagram extends BeamOsMesh<
 
     constructor(
         public beamOsId: string,
-        private shearDiagramResponse: ShearDiagramResponse,
+        private intervals: DiagramConsistantIntervalResponse[],
         private element1d: BeamOsElement1d
     ) {
         super(
             beamOsId,
-            BeamOsDiagram.GetGeometry(shearDiagramResponse),
+            BeamOsDiagram.GetGeometry(intervals),
             new THREE.MeshStandardMaterial({
                 color: BeamOsDiagram.DiagramHex,
                 side: THREE.DoubleSide,
@@ -54,27 +57,29 @@ export class BeamOsDiagram extends BeamOsMesh<
         this.rotateOnAxis(currentAngle, Math.PI);
     }
 
-    static GetGeometry(diagram: ShearDiagramResponse): THREE.BufferGeometry {
-        let highestValue = this.GetHighestValue(diagram);
+    static GetGeometry(
+        intervals: DiagramConsistantIntervalResponse[]
+    ): THREE.BufferGeometry {
+        let highestValue = this.GetHighestValue(intervals);
         let valueMult = 0.5 / highestValue;
 
         const point3dArr = new Array<number>();
 
-        for (let i = 0; i < diagram.intervals.length - 1; i++) {
-            let startLength = diagram.intervals[i].startLocation.value;
-            let endLength = diagram.intervals[i].endLocation.value;
+        for (let i = 0; i < intervals.length - 1; i++) {
+            let startLength = intervals[i].startLocation.value;
+            let endLength = intervals[i].endLocation.value;
             let range = endLength - startLength;
 
             for (let arrowIndex = 1; arrowIndex < 4; arrowIndex++) {
                 let currentX = startLength + (arrowIndex / 3) * range;
                 let currentEval = this.EvalPolynomial(
-                    diagram.intervals[i].polynomialCoefficients,
+                    intervals[i].polynomialCoefficients,
                     currentX
                 );
 
                 let previousX = startLength + ((arrowIndex - 1) / 3) * range;
                 let prevEval = this.EvalPolynomial(
-                    diagram.intervals[i].polynomialCoefficients,
+                    intervals[i].polynomialCoefficients,
                     previousX
                 );
 
@@ -113,10 +118,12 @@ export class BeamOsDiagram extends BeamOsMesh<
         return geometry;
     }
 
-    static GetHighestValue(diagram: ShearDiagramResponse): number {
+    static GetHighestValue(
+        intervals: DiagramConsistantIntervalResponse[]
+    ): number {
         let highest = 0;
 
-        diagram.intervals.forEach((interval) => {
+        intervals.forEach((interval) => {
             let startLength = interval.startLocation.value;
             let endLength = interval.endLocation.value;
             let range = endLength - startLength;
