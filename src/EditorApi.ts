@@ -16,7 +16,7 @@ import { ResultFactory } from "./EditorApi/EditorApiAlphaExtensions";
 import { BeamOsNode } from "./SceneObjects/BeamOsNode";
 import { BeamOsElement1d } from "./SceneObjects/BeamOsElement1d";
 import { BeamOsPointLoad } from "./SceneObjects/BeamOsPointLoad";
-import { BeamOsDistributedLoad } from "./SceneObjects/BeamOsDistributedLoad";
+import { BeamOsDiagram } from "./SceneObjects/BeamOsDiagram";
 
 export class EditorApi implements IEditorApiAlpha {
     private currentModel: THREE.Group;
@@ -115,11 +115,7 @@ export class EditorApi implements IEditorApiAlpha {
 
     createShearDiagram(body: ShearDiagramResponse): Promise<Result> {
         const el = this.getObjectByBeamOsId<BeamOsElement1d>(body.element1DId);
-        const shearDiagramResponse = new BeamOsDistributedLoad(
-            body.id,
-            body,
-            el
-        );
+        const shearDiagramResponse = new BeamOsDiagram(body.id, body, el);
 
         this.addObject(shearDiagramResponse);
         return Promise.resolve(ResultFactory.Success());

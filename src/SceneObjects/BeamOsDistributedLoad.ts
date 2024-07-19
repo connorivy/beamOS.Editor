@@ -51,38 +51,17 @@ export class BeamOsDistributedLoad extends BeamOsMesh<
                     shearDiagramResponse.globalShearDirection.z
         );
 
-        // var p1 = new THREE.Vector3();
-        // var p2 = new THREE.Vector3();
-        // var lookAt = new THREE.Vector3();
-        // var axis = new THREE.Vector3(
-        //     shearDiagramResponse.globalShearDirection.x,
-        //     shearDiagramResponse.globalShearDirection.y,
-        //     shearDiagramResponse.globalShearDirection.z
-        // );
-        // lookAt.copy(element1d.startNode.position);
-        // .sub(p1)
-        // .applyAxisAngle(axis, Math.PI * 0.5);
-        // .add(p1);
-
         let currentAngle = new THREE.Vector3(0, 0, 1);
         let desiredAngle = new THREE.Vector3(
             shearDiagramResponse.globalShearDirection.x,
             shearDiagramResponse.globalShearDirection.y,
             shearDiagramResponse.globalShearDirection.z
         );
-        let deltaX =
-            element1d.endNode.position.x - element1d.startNode.position.x;
-        let deltaY =
-            element1d.endNode.position.y - element1d.startNode.position.y;
-        let deltaZ =
-            element1d.endNode.position.z - element1d.startNode.position.z;
 
         let axis = currentAngle.clone().cross(desiredAngle).normalize();
-        let otherAxis = new THREE.Vector3(deltaX, deltaY, deltaZ).normalize();
         let x = currentAngle.angleTo(desiredAngle);
 
-        this.lookAt(element1d.startNode.position);
-        // this.position.applyAxisAngle(axis, x);
+        this.setRotationFromAxisAngle(axis, -x);
     }
 
     static GetGeometry(
