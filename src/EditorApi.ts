@@ -103,12 +103,7 @@ export class EditorApi implements IEditorApiAlpha {
         console.log("createPointLoad", body);
 
         const node = this.getObjectByBeamOsId<BeamOsNode>(body.nodeId);
-        const pointLoad = new BeamOsPointLoad(
-            body.id,
-            node,
-            body.force,
-            body.direction
-        );
+        const pointLoad = new BeamOsPointLoad(body.id, node, body.direction);
 
         this.addObject(pointLoad);
         return Promise.resolve(ResultFactory.Success());
@@ -139,7 +134,7 @@ export class EditorApi implements IEditorApiAlpha {
     }
 
     reduceChangeSelectionCommand(
-        body: ChangeSelectionCommand
+        _body: ChangeSelectionCommand
     ): Promise<Result> {
         throw new Error("Method not implemented.");
     }

@@ -8,7 +8,6 @@ import {
     SelectedObject,
 } from "./EditorApi/EditorEventsApi";
 import { EditorConfigurations } from "./EditorConfigurations";
-import { BeamOsDiagram } from "./SceneObjects/BeamOsDiagram";
 
 export class Selector {
     private selectionBox: THREE.Box3Helper;

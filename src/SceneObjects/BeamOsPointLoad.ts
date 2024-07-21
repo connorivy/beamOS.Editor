@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { BeamOsMesh } from "../BeamOsMesh";
 import { BufferGeometryUtils } from "three/examples/jsm/Addons.js";
 import { BeamOsNode } from "./BeamOsNode";
-import { UnitValueDto, Vector3 } from "../EditorApi/EditorApiAlpha";
+import { Vector3 } from "../EditorApi/EditorApiAlpha";
 
 export interface PointLoadEventMap extends THREE.Object3DEventMap {
     moved: {};
@@ -19,7 +19,6 @@ export class BeamOsPointLoad extends BeamOsMesh<
     private static PointLoadHex: number = 0x00ff00;
     private static pointLoadConeRadius: number = 0.1;
     private static pointLoadConeHeight: number = 0.2;
-    private static coneDirectionalOffset: number = -5;
 
     private static pointLoadCylinderRadius: number = 0.04;
     private static pointLoadCylinderHeight: number =
@@ -30,7 +29,6 @@ export class BeamOsPointLoad extends BeamOsMesh<
     constructor(
         public beamOsId: string,
         private node: BeamOsNode,
-        private force: UnitValueDto,
         private direction: Vector3
     ) {
         super(

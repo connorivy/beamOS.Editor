@@ -1,9 +1,6 @@
 import * as THREE from "three";
 import { BeamOsMesh } from "../BeamOsMesh";
-import {
-    DiagramConsistantIntervalResponse,
-    ShearDiagramResponse,
-} from "../EditorApi/EditorApiAlpha";
+import { DiagramConsistantIntervalResponse } from "../EditorApi/EditorApiAlpha";
 import { BeamOsElement1d } from "./BeamOsElement1d";
 
 export interface DiagramEventMap extends THREE.Object3DEventMap {
@@ -16,12 +13,12 @@ export class BeamOsDiagram extends BeamOsMesh<
     DiagramEventMap
 > {
     public beamOsObjectType: string = "Diagram";
-    private static DiagramHex: number = 0xff00ff;
+    // private static DiagramHex: number = 0xff00ff;
 
     constructor(
         public beamOsId: string,
-        private intervals: DiagramConsistantIntervalResponse[],
-        private element1d: BeamOsElement1d
+        intervals: DiagramConsistantIntervalResponse[],
+        element1d: BeamOsElement1d
     ) {
         super(
             beamOsId,

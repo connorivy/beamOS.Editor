@@ -2,7 +2,6 @@ import * as THREE from "three";
 import { BufferGeometryUtils } from "three/examples/jsm/Addons.js";
 import { BeamOsMesh } from "../BeamOsMesh";
 import { ShearDiagramResponse } from "../EditorApi/EditorApiAlpha";
-import { BeamOsNode } from "./BeamOsNode";
 import { BeamOsPointLoad } from "./BeamOsPointLoad";
 import { BeamOsElement1d } from "./BeamOsElement1d";
 
@@ -18,18 +17,11 @@ export class BeamOsDistributedLoad extends BeamOsMesh<
     public beamOsObjectType: string = "DistributedLoad";
 
     private static DistributedLoadHex: number = 0x00ff00;
-    private static DistributedLoadConeRadius: number = 0.1;
-    private static DistributedLoadConeHeight: number = 0.2;
-    private static coneDirectionalOffset: number = -5;
-
-    private static DistributedLoadCylinderRadius: number = 0.04;
-    private static DistributedLoadCylinderHeight: number =
-        this.DistributedLoadCylinderRadius * 10;
 
     constructor(
         public beamOsId: string,
-        private shearDiagramResponse: ShearDiagramResponse,
-        private element1d: BeamOsElement1d
+        shearDiagramResponse: ShearDiagramResponse,
+        element1d: BeamOsElement1d
     ) {
         super(
             beamOsId,
@@ -81,30 +73,24 @@ export class BeamOsDistributedLoad extends BeamOsMesh<
         );
 
         for (let i = 0; i < diagram.intervals.length; i++) {
-            const currentDiagram = diagram.intervals[i];
-            // const nextDiagram =
-            //     i + 1 == diagram.intervals.length
-            //         ? null
-            //         : diagram.intervals[i + 1];
-
             let startLength = diagram.intervals[i].startLocation.value;
             let endLength = diagram.intervals[i].endLocation.value;
             let range = endLength - startLength;
 
             for (let arrowIndex = 0; arrowIndex < 3; arrowIndex++) {
                 let currentX = startLength + (arrowIndex / 3) * range;
-                let polyEval = this.EvalPolynomial(
-                    diagram.intervals[i].polynomialCoefficients,
-                    currentX
-                );
-                let pointAlongBeam = new THREE.Vector3(
-                    element1d.startNode.position.x +
-                        (deltaX * currentX) / distance,
-                    element1d.startNode.position.y +
-                        (deltaY * currentX) / distance,
-                    element1d.startNode.position.z +
-                        (deltaZ * currentX) / distance
-                );
+                // let polyEval = this.EvalPolynomial(
+                //     diagram.intervals[i].polynomialCoefficients,
+                //     currentX
+                // );
+                // let pointAlongBeam = new THREE.Vector3(
+                //     element1d.startNode.position.x +
+                //         (deltaX * currentX) / distance,
+                //     element1d.startNode.position.y +
+                //         (deltaY * currentX) / distance,
+                //     element1d.startNode.position.z +
+                //         (deltaZ * currentX) / distance
+                // );
 
                 let newGeo = BeamOsPointLoad.GetGeometry()
                     // .scale(polyEval, polyEval, polyEval)
@@ -129,7 +115,7 @@ export class BeamOsDistributedLoad extends BeamOsMesh<
                 geometries.push(newGeo);
             }
         }
-        var geos = BufferGeometryUtils.mergeGeometries(geometries);
+
         return BufferGeometryUtils.mergeGeometries(geometries);
     }
 
