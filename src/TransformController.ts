@@ -4,7 +4,7 @@ import { OrbitControls } from "three/examples/jsm/Addons.js";
 import {
     Coordinate3D,
     IEditorEventsApi,
-    NodeMovedEvent,
+    MoveNodeCommand,
 } from "./EditorApi/EditorEventsApi";
 import { BeamOsNode } from "./SceneObjects/BeamOsNode";
 
@@ -15,7 +15,7 @@ export class TransformController {
     constructor(
         scene: THREE.Scene,
         camera: THREE.Camera,
-        domElement: HTMLElement,
+        private domElement: HTMLElement,
         private controls: OrbitControls,
         private dispatcher: IEditorEventsApi
     ) {
@@ -41,8 +41,9 @@ export class TransformController {
                 throw new Error("start location is undefined");
             }
 
-            await this.dispatcher.handleNodeMovedEvent(
-                new NodeMovedEvent({
+            await this.dispatcher.dispatchMoveNodeCommand(
+                new MoveNodeCommand({
+                    canvasId: this.domElement.id,
                     nodeId: event.target.object.beamOsId,
                     previousLocation: this.startLocation,
                     newLocation: new Coordinate3D({
@@ -50,6 +51,7 @@ export class TransformController {
                         y: event.target.object.position.y,
                         z: event.target.object.position.z,
                     }),
+                    source: 2,
                 })
             );
 

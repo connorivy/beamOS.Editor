@@ -1,17 +1,23 @@
 import * as THREE from "three";
 import {
+    ChangeSelectionCommand,
     Element1DResponse,
     IEditorApiAlpha,
     ModelResponse,
     ModelResponseHydrated,
-    NodeMovedEvent,
+    MomentDiagramResponse,
+    MoveNodeCommand,
     NodeResponse,
+    PointLoadResponse,
     Result,
+    ShearDiagramResponse,
 } from "./EditorApi/EditorApiAlpha";
 import { EditorConfigurations } from "./EditorConfigurations";
 import { ResultFactory } from "./EditorApi/EditorApiAlphaExtensions";
 import { BeamOsNode } from "./SceneObjects/BeamOsNode";
 import { BeamOsElement1d } from "./SceneObjects/BeamOsElement1d";
+import { BeamOsPointLoad } from "./SceneObjects/BeamOsPointLoad";
+import { BeamOsDiagram } from "./SceneObjects/BeamOsDiagram";
 
 export class EditorApi implements IEditorApiAlpha {
     private currentModel: THREE.Group;
@@ -34,6 +40,9 @@ export class EditorApi implements IEditorApiAlpha {
         });
         modelResponse.element1ds?.forEach(async (element1d) => {
             await this.createElement1d(element1d);
+        });
+        modelResponse.pointLoads?.forEach(async (el) => {
+            await this.createPointLoad(el);
         });
         return ResultFactory.Success();
     }
@@ -82,14 +91,60 @@ export class EditorApi implements IEditorApiAlpha {
             nodeResponse.id,
             nodeResponse.locationPoint.xCoordinate.value,
             nodeResponse.locationPoint.yCoordinate.value,
-            nodeResponse.locationPoint.zCoordinate.value
+            nodeResponse.locationPoint.zCoordinate.value,
+            nodeResponse.restraint
         );
 
         this.addObject(node);
         return Promise.resolve(ResultFactory.Success());
     }
 
-    reduceNodeMovedEvent(body: NodeMovedEvent): Promise<Result> {
+    createPointLoad(body: PointLoadResponse): Promise<Result> {
+        console.log("createPointLoad", body);
+
+        const node = this.getObjectByBeamOsId<BeamOsNode>(body.nodeId);
+        const pointLoad = new BeamOsPointLoad(
+            body.id,
+            node,
+            body.force,
+            body.direction
+        );
+
+        this.addObject(pointLoad);
+        return Promise.resolve(ResultFactory.Success());
+    }
+
+    createShearDiagram(body: ShearDiagramResponse): Promise<Result> {
+        const el = this.getObjectByBeamOsId<BeamOsElement1d>(body.element1DId);
+        const shearDiagramResponse = new BeamOsDiagram(
+            body.id,
+            body.intervals,
+            el
+        );
+
+        this.addObject(shearDiagramResponse);
+        return Promise.resolve(ResultFactory.Success());
+    }
+
+    createMomentDiagram(body: MomentDiagramResponse): Promise<Result> {
+        const el = this.getObjectByBeamOsId<BeamOsElement1d>(body.element1DId);
+        const shearDiagramResponse = new BeamOsDiagram(
+            body.id,
+            body.intervals,
+            el
+        );
+
+        this.addObject(shearDiagramResponse);
+        return Promise.resolve(ResultFactory.Success());
+    }
+
+    reduceChangeSelectionCommand(
+        body: ChangeSelectionCommand
+    ): Promise<Result> {
+        throw new Error("Method not implemented.");
+    }
+
+    reduceMoveNodeCommand(body: MoveNodeCommand): Promise<Result> {
         let node = this.scene.getObjectByProperty(
             "beamOsId",
             body.nodeId
@@ -104,5 +159,21 @@ export class EditorApi implements IEditorApiAlpha {
 
     addObject(mesh: THREE.Mesh) {
         this.currentModel.add(mesh);
+    }
+
+    getObjectByBeamOsId<TObject>(beamOsId: string): TObject {
+        return (
+            (this.currentModel.getObjectByProperty(
+                "beamOsId",
+                beamOsId
+            ) as TObject) ??
+            this.throwExpression(
+                "Could not find object with beamOsId " + beamOsId
+            )
+        );
+    }
+
+    throwExpression(errorMessage: string): never {
+        throw new Error(errorMessage);
     }
 }

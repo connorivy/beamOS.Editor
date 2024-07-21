@@ -6,11 +6,12 @@ export interface IBeamOsMesh<
 > {
     id: number;
     beamOsId: string;
+    beamOsObjectType: string;
     geometry: TGeometry;
     material: TMaterial;
 }
 
-export class BeamOsMesh<
+export abstract class BeamOsMesh<
         TGeometry extends THREE.BufferGeometry = THREE.BufferGeometry,
         TMaterial extends THREE.Material = THREE.Material,
         TEventMap extends THREE.Object3DEventMap = THREE.Object3DEventMap
@@ -18,6 +19,8 @@ export class BeamOsMesh<
     extends THREE.Mesh<TGeometry, TMaterial, TEventMap>
     implements IBeamOsMesh
 {
+    public abstract beamOsObjectType: string;
+
     constructor(
         public beamOsId: string,
         geometry?: TGeometry,

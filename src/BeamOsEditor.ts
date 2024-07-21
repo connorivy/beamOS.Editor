@@ -9,7 +9,7 @@ import { EditorApi } from "./EditorApi";
 // import { SimpleGui } from './SimpleGui';
 import { EditorConfigurations } from "./EditorConfigurations";
 import { IEditorEventsApi } from "./EditorApi/EditorEventsApi";
-import { IEditorEventsApiFactory } from "./EditorApi/EditorEventsApiProxy";
+import { DotnetApiFactory } from "./EditorApi/DotnetApiFactory";
 
 export class BeamOsEditor {
     public scene: THREE.Scene;
@@ -19,14 +19,28 @@ export class BeamOsEditor {
     raycaster: Raycaster;
     transformController: TransformController;
     selector: Selector;
-    editorConfigurations: EditorConfigurations;
     public api: EditorApi;
 
     constructor(
         public domElement: HTMLElement,
-        public dispatcher: IEditorEventsApi
+        public dotnetDispatcherApi: IEditorEventsApi,
+        private editorConfigurations: EditorConfigurations
     ) {
         this.scene = new THREE.Scene();
+        this.scene.add(new THREE.AmbientLight(0xaaaaaa));
+
+        const light = new THREE.SpotLight(0xffffff, 10000);
+        light.position.set(0, 25, 50);
+        light.angle = Math.PI / 5;
+
+        light.castShadow = true;
+        light.shadow.camera.near = 10;
+        light.shadow.camera.far = 100;
+        light.shadow.mapSize.width = 1024;
+        light.shadow.mapSize.height = 1024;
+
+        this.scene.add(light);
+
         this.camera = new THREE.PerspectiveCamera(
             50,
             window.innerWidth / window.innerHeight,
@@ -35,7 +49,10 @@ export class BeamOsEditor {
         );
         this.camera.position.set(5, 5, 10);
 
-        const selectorInfo = new SelectorInfo();
+        const selectorInfo = new SelectorInfo(
+            dotnetDispatcherApi,
+            domElement.id
+        );
 
         this.renderer = new THREE.WebGLRenderer({
             canvas: domElement,
@@ -46,8 +63,7 @@ export class BeamOsEditor {
             this.renderer,
             this.scene,
             this.mouse,
-            this.camera,
-            selectorInfo
+            this.camera
         );
         const controls = new Controls(this.camera, this.domElement);
         this.transformController = new TransformController(
@@ -55,7 +71,7 @@ export class BeamOsEditor {
             this.camera,
             this.domElement,
             controls.controls,
-            dispatcher
+            dotnetDispatcherApi
         );
         this.selector = new Selector(
             this.domElement,
@@ -63,12 +79,11 @@ export class BeamOsEditor {
             this.mouse,
             this.raycaster.raycastInfo,
             selectorInfo,
-            this.transformController
+            this.transformController,
+            editorConfigurations
         );
 
-        this.editorConfigurations = new EditorConfigurations();
-
-        this.api = new EditorApi(this.scene, this.editorConfigurations);
+        this.api = new EditorApi(this.scene, editorConfigurations);
 
         this.initCanvas();
         // this.initGui();
@@ -79,7 +94,8 @@ export class BeamOsEditor {
 
     static createFromId(
         domElementId: string,
-        dotnetRef: IEditorEventsApi
+        eventsApiDotnetRef: any,
+        isReadOnly: boolean
     ): BeamOsEditor {
         const domElement = document.getElementById(domElementId);
         if (!domElement) {
@@ -88,9 +104,11 @@ export class BeamOsEditor {
             );
         }
 
-        let dispatcher = IEditorEventsApiFactory(dotnetRef);
+        let dotnetDispatcherApi =
+            DotnetApiFactory<IEditorEventsApi>(eventsApiDotnetRef);
+        let editorConfigurations = new EditorConfigurations(isReadOnly);
 
-        return new this(domElement, dispatcher);
+        return new this(domElement, dotnetDispatcherApi, editorConfigurations);
     }
 
     initCanvas() {
@@ -138,10 +156,6 @@ export class BeamOsEditor {
                 height
             );
         }
-    }
-
-    public sayHello() {
-        console.log("hello :)");
     }
 
     public animate() {
