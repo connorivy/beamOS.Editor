@@ -25,11 +25,11 @@ export class BeamOsDiagram extends BeamOsMesh<
     ) {
         super(
             beamOsId,
-            BeamOsDiagram.GetGeometry(intervals),
+            BeamOsDiagram.GetGeometry(intervals, element1d),
             new THREE.MeshStandardMaterial({
-                color: BeamOsDiagram.DiagramHex,
+                // color: BeamOsDiagram.DiagramHex,
                 side: THREE.DoubleSide,
-                // vertexColors: true,
+                vertexColors: true,
                 // wireframe: true,
             })
         );
@@ -58,12 +58,23 @@ export class BeamOsDiagram extends BeamOsMesh<
     }
 
     static GetGeometry(
-        intervals: DiagramConsistantIntervalResponse[]
+        intervals: DiagramConsistantIntervalResponse[],
+        element1d: BeamOsElement1d
     ): THREE.BufferGeometry {
         let highestValue = this.GetHighestValue(intervals);
         let valueMult = 0.5 / highestValue;
 
         const point3dArr = new Array<number>();
+
+        const worldStart = element1d.startNode.position;
+        const worldEnd = element1d.endNode.position;
+        const worldRange = worldEnd.distanceTo(worldStart);
+
+        const localRange =
+            intervals[intervals.length - 1].endLocation.value -
+            intervals[0].startLocation.value;
+
+        const worldRangeScalingFactor = worldRange / localRange;
 
         for (let i = 0; i < intervals.length - 1; i++) {
             let startLength = intervals[i].startLocation.value;
@@ -84,14 +95,26 @@ export class BeamOsDiagram extends BeamOsMesh<
                 );
 
                 // previous bottom triangle
-                point3dArr.push(previousX, 0, 0);
-                point3dArr.push(previousX, prevEval * valueMult, 0);
-                point3dArr.push(currentX, 0, 0);
+                point3dArr.push(previousX * worldRangeScalingFactor, 0, 0);
+                point3dArr.push(
+                    previousX * worldRangeScalingFactor,
+                    prevEval * valueMult,
+                    0
+                );
+                point3dArr.push(currentX * worldRangeScalingFactor, 0, 0);
 
                 // previous top triangle
-                point3dArr.push(currentX, 0, 0);
-                point3dArr.push(previousX, prevEval * valueMult, 0);
-                point3dArr.push(currentX, currentEval * valueMult, 0);
+                point3dArr.push(currentX * worldRangeScalingFactor, 0, 0);
+                point3dArr.push(
+                    previousX * worldRangeScalingFactor,
+                    prevEval * valueMult,
+                    0
+                );
+                point3dArr.push(
+                    currentX * worldRangeScalingFactor,
+                    currentEval * valueMult,
+                    0
+                );
             }
         }
 
@@ -115,6 +138,7 @@ export class BeamOsDiagram extends BeamOsMesh<
             "color",
             new THREE.BufferAttribute(new Float32Array(colorPoints), 3)
         );
+        console.log(colorPoints);
         return geometry;
     }
 
@@ -152,16 +176,27 @@ export class BeamOsDiagram extends BeamOsMesh<
 
     static GetColorFromUnity(unity: number): THREE.Color {
         const negativeColor = new THREE.Color(0, 0, 1);
-        const neutralColor = new THREE.Color(220 / 256, 220 / 256, 220 / 256);
+        const neutralColor = new THREE.Color(1, 1, 1);
         const positiveColor = new THREE.Color(1, 0, 0);
         let result = new THREE.Color();
+        console.log("unity", unity);
 
-        if (unity >= 0 && unity <= 1) {
-            result.lerpColors(neutralColor, positiveColor, unity);
-        } else if (unity < 0 && unity >= -1) {
-            result.lerpColors(neutralColor, negativeColor, unity);
+        // if (unity >= 1) {
+        //     result.set(positiveColor);
+        // } else if (unity >= 0) {
+        //     result.lerpColors(neutralColor, positiveColor, unity);
+        // } else if (unity >= -1) {
+        //     result.lerpColors(neutralColor, negativeColor, unity);
+        // } else {
+        //     result.set(negativeColor);
+        // }
+
+        if (unity > 0) {
+            result.set(positiveColor);
+        } else if (unity == 0) {
+            result.set(neutralColor);
         } else {
-            throw new Error("Unity must be between [-1, 1]");
+            result.set(negativeColor);
         }
 
         return result;
