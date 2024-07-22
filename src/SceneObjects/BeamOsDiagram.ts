@@ -135,7 +135,7 @@ export class BeamOsDiagram extends BeamOsMesh<
             "color",
             new THREE.BufferAttribute(new Float32Array(colorPoints), 3)
         );
-        console.log(colorPoints);
+
         return geometry;
     }
 
@@ -176,7 +176,6 @@ export class BeamOsDiagram extends BeamOsMesh<
         const neutralColor = new THREE.Color(1, 1, 1);
         const positiveColor = new THREE.Color(1, 0, 0);
         let result = new THREE.Color();
-        console.log("unity", unity);
 
         // if (unity >= 1) {
         //     result.set(positiveColor);
