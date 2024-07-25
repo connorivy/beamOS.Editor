@@ -2,6 +2,7 @@ import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 
 export class EditorConfigurations {
     public defaultElement1dMaterial: LineMaterial;
+    public yAxisUp: boolean = false;
 
     constructor(public isReadOnly: boolean) {
         this.defaultElement1dMaterial = new LineMaterial({

@@ -18,7 +18,8 @@ export class BeamOsDiagram extends BeamOsMesh<
     constructor(
         public beamOsId: string,
         intervals: DiagramConsistantIntervalResponse[],
-        element1d: BeamOsElement1d
+        element1d: BeamOsElement1d,
+        yAxisUp: boolean
     ) {
         super(
             beamOsId,
@@ -51,7 +52,12 @@ export class BeamOsDiagram extends BeamOsMesh<
         let x = currentAngle.angleTo(desiredAngle);
 
         this.setRotationFromAxisAngle(axis, x);
-        this.rotateOnAxis(currentAngle, Math.PI);
+
+        // GetGeometry is assuming a yAxis is up (three js conventions).
+        // Must rotate the geometry if that is the case
+        if (!yAxisUp) {
+            this.rotateOnAxis(currentAngle, Math.PI / 2);
+        }
     }
 
     static GetGeometry(

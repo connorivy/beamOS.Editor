@@ -8,6 +8,7 @@ import {
     MomentDiagramResponse,
     MoveNodeCommand,
     NodeResponse,
+    PhysicalModelSettings,
     PointLoadResponse,
     Result,
     ShearDiagramResponse,
@@ -23,11 +24,11 @@ export class EditorApi implements IEditorApiAlpha {
     private currentModel: THREE.Group;
 
     constructor(
-        private scene: THREE.Scene,
+        private sceneRoot: THREE.Group,
         private config: EditorConfigurations
     ) {
         this.currentModel = new THREE.Group();
-        this.scene.add(this.currentModel);
+        this.sceneRoot.add(this.currentModel);
     }
 
     async clear(): Promise<Result> {
@@ -51,11 +52,11 @@ export class EditorApi implements IEditorApiAlpha {
         element1DResponse: Element1DResponse
     ): Promise<Result> {
         console.log("createElement1d", element1DResponse);
-        let startNode = this.scene.getObjectByProperty(
+        let startNode = this.sceneRoot.getObjectByProperty(
             "beamOsId",
             element1DResponse.startNodeId
         ) as BeamOsNode;
-        let endNode = this.scene.getObjectByProperty(
+        let endNode = this.sceneRoot.getObjectByProperty(
             "beamOsId",
             element1DResponse.endNodeId
         ) as BeamOsNode;
@@ -92,7 +93,8 @@ export class EditorApi implements IEditorApiAlpha {
             nodeResponse.locationPoint.xCoordinate.value,
             nodeResponse.locationPoint.yCoordinate.value,
             nodeResponse.locationPoint.zCoordinate.value,
-            nodeResponse.restraint
+            nodeResponse.restraint,
+            this.config.yAxisUp
         );
 
         this.addObject(node);
@@ -114,7 +116,8 @@ export class EditorApi implements IEditorApiAlpha {
         const shearDiagramResponse = new BeamOsDiagram(
             body.id,
             body.intervals,
-            el
+            el,
+            this.config.yAxisUp
         );
 
         this.addObject(shearDiagramResponse);
@@ -126,10 +129,28 @@ export class EditorApi implements IEditorApiAlpha {
         const shearDiagramResponse = new BeamOsDiagram(
             body.id,
             body.intervals,
-            el
+            el,
+            this.config.yAxisUp
         );
 
         this.addObject(shearDiagramResponse);
+        return Promise.resolve(ResultFactory.Success());
+    }
+
+    setSettings(body: PhysicalModelSettings): Promise<Result> {
+        if (body.yAxisUp == this.config.yAxisUp) {
+            return Promise.resolve(ResultFactory.Success());
+        }
+        this.config.yAxisUp = body.yAxisUp;
+
+        if (body.yAxisUp) {
+            this.sceneRoot.rotateX(Math.PI / 2);
+            this.sceneRoot.up = new THREE.Vector3(0, 1, 0);
+        } else {
+            this.sceneRoot.rotateX(-Math.PI / 2);
+            this.sceneRoot.up = new THREE.Vector3(0, 0, 1);
+        }
+
         return Promise.resolve(ResultFactory.Success());
     }
 
@@ -140,7 +161,7 @@ export class EditorApi implements IEditorApiAlpha {
     }
 
     reduceMoveNodeCommand(body: MoveNodeCommand): Promise<Result> {
-        let node = this.scene.getObjectByProperty(
+        let node = this.sceneRoot.getObjectByProperty(
             "beamOsId",
             body.nodeId
         ) as BeamOsNode;

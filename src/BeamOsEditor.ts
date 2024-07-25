@@ -13,6 +13,7 @@ import { DotnetApiFactory } from "./EditorApi/DotnetApiFactory";
 
 export class BeamOsEditor {
     public scene: THREE.Scene;
+    sceneRoot: THREE.Group;
     camera: THREE.PerspectiveCamera;
     renderer: THREE.WebGLRenderer;
     mouse: THREE.Vector2;
@@ -28,6 +29,12 @@ export class BeamOsEditor {
     ) {
         this.scene = new THREE.Scene();
         this.scene.add(new THREE.AmbientLight(0xaaaaaa));
+
+        // z-up scene by default
+        this.sceneRoot = new THREE.Group();
+        this.sceneRoot.rotateX(-Math.PI / 2);
+        this.sceneRoot.up = new THREE.Vector3(0, 0, 1);
+        this.scene.add(this.sceneRoot);
 
         const light = new THREE.SpotLight(0xffffff, 10000);
         light.position.set(0, 25, 50);
@@ -83,7 +90,7 @@ export class BeamOsEditor {
             editorConfigurations
         );
 
-        this.api = new EditorApi(this.scene, editorConfigurations);
+        this.api = new EditorApi(this.sceneRoot, editorConfigurations);
 
         this.initCanvas();
         // this.initGui();
