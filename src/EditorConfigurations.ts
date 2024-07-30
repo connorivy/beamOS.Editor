@@ -3,6 +3,8 @@ import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 export class EditorConfigurations {
     public defaultElement1dMaterial: LineMaterial;
     public yAxisUp: boolean = false;
+    public maxShearMagnitude: number = 0;
+    public maxMomentMagnitude: number = 0;
 
     constructor(public isReadOnly: boolean) {
         this.defaultElement1dMaterial = new LineMaterial({

@@ -5,6 +5,7 @@ import {
     IEditorApiAlpha,
     ModelResponse,
     ModelResponseHydrated,
+    ModelResultResponse,
     MomentDiagramResponse,
     MoveNodeCommand,
     NodeResponse,
@@ -117,7 +118,8 @@ export class EditorApi implements IEditorApiAlpha {
             body.id,
             body.intervals,
             el,
-            this.config.yAxisUp
+            this.config.yAxisUp,
+            this.config.maxShearMagnitude
         );
 
         this.addObject(shearDiagramResponse);
@@ -130,10 +132,23 @@ export class EditorApi implements IEditorApiAlpha {
             body.id,
             body.intervals,
             el,
-            this.config.yAxisUp
+            this.config.yAxisUp,
+            this.config.maxMomentMagnitude
         );
 
         this.addObject(shearDiagramResponse);
+        return Promise.resolve(ResultFactory.Success());
+    }
+
+    setModelResults(body: ModelResultResponse): Promise<Result> {
+        this.config.maxShearMagnitude = Math.max(
+            body.maxShear.value,
+            Math.abs(body.minShear.value)
+        );
+        this.config.maxMomentMagnitude = Math.max(
+            body.maxMoment.value,
+            Math.abs(body.minMoment.value)
+        );
         return Promise.resolve(ResultFactory.Success());
     }
 
