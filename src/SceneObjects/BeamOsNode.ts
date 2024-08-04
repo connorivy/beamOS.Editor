@@ -24,7 +24,8 @@ export class BeamOsNode extends BeamOsMesh<
         xCoordinate: number,
         yCoordinate: number,
         zCoordinate: number,
-        restraint: RestraintResponse
+        restraint: RestraintResponse,
+        yAxisUp: boolean
     ) {
         let restraintType = RestraintResponseUtils.GetRestraintType(restraint);
         super(
@@ -33,6 +34,12 @@ export class BeamOsNode extends BeamOsMesh<
             new THREE.MeshLambertMaterial({ color: BeamOsNode.nodeHex })
         );
         this.position.set(xCoordinate, yCoordinate, zCoordinate);
+
+        // GetGeometry is assuming a yAxis is up (three js conventions).
+        // Must rotate the geometry if that is the case
+        if (!yAxisUp) {
+            this.rotateOnAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
+        }
     }
 
     public firePositionChangedEvent() {

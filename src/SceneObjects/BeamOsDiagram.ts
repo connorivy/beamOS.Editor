@@ -18,11 +18,13 @@ export class BeamOsDiagram extends BeamOsMesh<
     constructor(
         public beamOsId: string,
         intervals: DiagramConsistantIntervalResponse[],
-        element1d: BeamOsElement1d
+        element1d: BeamOsElement1d,
+        yAxisUp: boolean,
+        maxValue: number
     ) {
         super(
             beamOsId,
-            BeamOsDiagram.GetGeometry(intervals, element1d),
+            BeamOsDiagram.GetGeometry(intervals, element1d, maxValue),
             new THREE.MeshStandardMaterial({
                 // color: BeamOsDiagram.DiagramHex,
                 side: THREE.DoubleSide,
@@ -51,15 +53,20 @@ export class BeamOsDiagram extends BeamOsMesh<
         let x = currentAngle.angleTo(desiredAngle);
 
         this.setRotationFromAxisAngle(axis, x);
-        this.rotateOnAxis(currentAngle, Math.PI);
+
+        // GetGeometry is assuming a yAxis is up (three js conventions).
+        // Must rotate the geometry if that is the case
+        if (!yAxisUp) {
+            this.rotateOnAxis(currentAngle, Math.PI / 2);
+        }
     }
 
     static GetGeometry(
         intervals: DiagramConsistantIntervalResponse[],
-        element1d: BeamOsElement1d
+        element1d: BeamOsElement1d,
+        maxValue: number
     ): THREE.BufferGeometry {
-        let highestValue = this.GetHighestValue(intervals);
-        let valueMult = 0.5 / highestValue;
+        let valueMult = 0.7 / maxValue;
 
         const point3dArr = new Array<number>();
 
