@@ -16,7 +16,7 @@ export class BeamOsPointLoad extends BeamOsMesh<
     public beamOsObjectType: string = "PointLoad";
     private onNodeMovedFunc: (_event: any) => void;
 
-    private static PointLoadHex: number = 0x00ff00;
+    private static PointLoadHex: number = 0xe3963e;
     private static pointLoadConeRadius: number = 0.1;
     private static pointLoadConeHeight: number = 0.2;
 

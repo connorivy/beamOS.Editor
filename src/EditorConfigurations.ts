@@ -8,7 +8,7 @@ export class EditorConfigurations {
 
     constructor(public isReadOnly: boolean) {
         this.defaultElement1dMaterial = new LineMaterial({
-            color: 0x00ff00,
+            color: 0x5f8575,
             linewidth: 0.1, // in world units with size attenuation, pixels otherwise
             worldUnits: true,
             vertexColors: false,

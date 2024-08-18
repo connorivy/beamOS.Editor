@@ -18,6 +18,11 @@ export interface IEditorApiAlpha {
     /**
      * @return OK
      */
+    createElement1ds(body: Element1DResponse[]): Promise<Result>;
+
+    /**
+     * @return OK
+     */
     createModel(body: ModelResponse): Promise<Result>;
 
     /**
@@ -33,7 +38,17 @@ export interface IEditorApiAlpha {
     /**
      * @return OK
      */
+    createNodes(body: NodeResponse[]): Promise<Result>;
+
+    /**
+     * @return OK
+     */
     createPointLoad(body: PointLoadResponse): Promise<Result>;
+
+    /**
+     * @return OK
+     */
+    createPointLoads(body: PointLoadResponse[]): Promise<Result>;
 
     /**
      * @return OK
@@ -43,7 +58,17 @@ export interface IEditorApiAlpha {
     /**
      * @return OK
      */
+    createShearDiagrams(body: ShearDiagramResponse[]): Promise<Result>;
+
+    /**
+     * @return OK
+     */
     createMomentDiagram(body: MomentDiagramResponse): Promise<Result>;
+
+    /**
+     * @return OK
+     */
+    createMomentDiagrams(body: MomentDiagramResponse[]): Promise<Result>;
 
     /**
      * @return OK
@@ -105,6 +130,47 @@ export class EditorApiAlpha implements IEditorApiAlpha {
     }
 
     protected processCreateElement1d(response: Response): Promise<Result> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = Result.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<Result>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    createElement1ds(body: Element1DResponse[]): Promise<Result> {
+        let url_ = this.baseUrl + "/EditorApiAlpha/CreateElement1ds";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateElement1ds(_response);
+        });
+    }
+
+    protected processCreateElement1ds(response: Response): Promise<Result> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -248,6 +314,47 @@ export class EditorApiAlpha implements IEditorApiAlpha {
     /**
      * @return OK
      */
+    createNodes(body: NodeResponse[]): Promise<Result> {
+        let url_ = this.baseUrl + "/EditorApiAlpha/CreateNodes";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateNodes(_response);
+        });
+    }
+
+    protected processCreateNodes(response: Response): Promise<Result> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = Result.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<Result>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
     createPointLoad(body: PointLoadResponse): Promise<Result> {
         let url_ = this.baseUrl + "/EditorApiAlpha/CreatePointLoad";
         url_ = url_.replace(/[?&]$/, "");
@@ -269,6 +376,47 @@ export class EditorApiAlpha implements IEditorApiAlpha {
     }
 
     protected processCreatePointLoad(response: Response): Promise<Result> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = Result.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<Result>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    createPointLoads(body: PointLoadResponse[]): Promise<Result> {
+        let url_ = this.baseUrl + "/EditorApiAlpha/CreatePointLoads";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreatePointLoads(_response);
+        });
+    }
+
+    protected processCreatePointLoads(response: Response): Promise<Result> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -330,6 +478,47 @@ export class EditorApiAlpha implements IEditorApiAlpha {
     /**
      * @return OK
      */
+    createShearDiagrams(body: ShearDiagramResponse[]): Promise<Result> {
+        let url_ = this.baseUrl + "/EditorApiAlpha/CreateShearDiagrams";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateShearDiagrams(_response);
+        });
+    }
+
+    protected processCreateShearDiagrams(response: Response): Promise<Result> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = Result.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<Result>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
     createMomentDiagram(body: MomentDiagramResponse): Promise<Result> {
         let url_ = this.baseUrl + "/EditorApiAlpha/CreateMomentDiagram";
         url_ = url_.replace(/[?&]$/, "");
@@ -351,6 +540,47 @@ export class EditorApiAlpha implements IEditorApiAlpha {
     }
 
     protected processCreateMomentDiagram(response: Response): Promise<Result> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = Result.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<Result>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    createMomentDiagrams(body: MomentDiagramResponse[]): Promise<Result> {
+        let url_ = this.baseUrl + "/EditorApiAlpha/CreateMomentDiagrams";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateMomentDiagrams(_response);
+        });
+    }
+
+    protected processCreateMomentDiagrams(response: Response): Promise<Result> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -568,6 +798,42 @@ export class EditorApiAlpha implements IEditorApiAlpha {
         }
         return Promise.resolve<Result>(null as any);
     }
+}
+
+export class AnalysisSettingsContract implements IAnalysisSettingsContract {
+    element1DAnalysisType!: Element1dAnalysisType;
+
+    constructor(data?: IAnalysisSettingsContract) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.element1DAnalysisType = _data["element1DAnalysisType"];
+        }
+    }
+
+    static fromJS(data: any): AnalysisSettingsContract {
+        data = typeof data === 'object' ? data : {};
+        let result = new AnalysisSettingsContract();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["element1DAnalysisType"] = this.element1DAnalysisType;
+        return data;
+    }
+}
+
+export interface IAnalysisSettingsContract {
+    element1DAnalysisType: Element1dAnalysisType;
 }
 
 export class BeamOsError implements IBeamOsError {
@@ -829,6 +1095,12 @@ export interface IElement1DResponse {
     materialId: string;
     sectionProfileId: string;
     sectionProfileRotation: UnitValueDto;
+}
+
+export enum Element1dAnalysisType {
+    _0 = 0,
+    _1 = 1,
+    _2 = 2,
 }
 
 export class MaterialResponse implements IMaterialResponse {
@@ -1458,6 +1730,7 @@ export interface INodeResponse {
 
 export class PhysicalModelSettings implements IPhysicalModelSettings {
     unitSettings!: UnitSettingsDtoVerbose;
+    analysisSettings!: AnalysisSettingsContract;
     yAxisUp!: boolean;
 
     constructor(data?: IPhysicalModelSettings) {
@@ -1469,12 +1742,14 @@ export class PhysicalModelSettings implements IPhysicalModelSettings {
         }
         if (!data) {
             this.unitSettings = new UnitSettingsDtoVerbose();
+            this.analysisSettings = new AnalysisSettingsContract();
         }
     }
 
     init(_data?: any) {
         if (_data) {
             this.unitSettings = _data["unitSettings"] ? UnitSettingsDtoVerbose.fromJS(_data["unitSettings"]) : new UnitSettingsDtoVerbose();
+            this.analysisSettings = _data["analysisSettings"] ? AnalysisSettingsContract.fromJS(_data["analysisSettings"]) : new AnalysisSettingsContract();
             this.yAxisUp = _data["yAxisUp"];
         }
     }
@@ -1489,6 +1764,7 @@ export class PhysicalModelSettings implements IPhysicalModelSettings {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["unitSettings"] = this.unitSettings ? this.unitSettings.toJSON() : <any>undefined;
+        data["analysisSettings"] = this.analysisSettings ? this.analysisSettings.toJSON() : <any>undefined;
         data["yAxisUp"] = this.yAxisUp;
         return data;
     }
@@ -1496,6 +1772,7 @@ export class PhysicalModelSettings implements IPhysicalModelSettings {
 
 export interface IPhysicalModelSettings {
     unitSettings: UnitSettingsDtoVerbose;
+    analysisSettings: AnalysisSettingsContract;
     yAxisUp: boolean;
 }
 
@@ -1705,10 +1982,13 @@ export interface IResult {
 
 export class SectionProfileResponse implements ISectionProfileResponse {
     id!: string;
+    modelId!: string;
     area!: UnitValueDto;
     strongAxisMomentOfInertia!: UnitValueDto;
     weakAxisMomentOfInertia!: UnitValueDto;
     polarMomentOfInertia!: UnitValueDto;
+    strongAxisShearArea!: UnitValueDto;
+    weakAxisShearArea!: UnitValueDto;
 
     constructor(data?: ISectionProfileResponse) {
         if (data) {
@@ -1722,16 +2002,21 @@ export class SectionProfileResponse implements ISectionProfileResponse {
             this.strongAxisMomentOfInertia = new UnitValueDto();
             this.weakAxisMomentOfInertia = new UnitValueDto();
             this.polarMomentOfInertia = new UnitValueDto();
+            this.strongAxisShearArea = new UnitValueDto();
+            this.weakAxisShearArea = new UnitValueDto();
         }
     }
 
     init(_data?: any) {
         if (_data) {
             this.id = _data["id"];
+            this.modelId = _data["modelId"];
             this.area = _data["area"] ? UnitValueDto.fromJS(_data["area"]) : new UnitValueDto();
             this.strongAxisMomentOfInertia = _data["strongAxisMomentOfInertia"] ? UnitValueDto.fromJS(_data["strongAxisMomentOfInertia"]) : new UnitValueDto();
             this.weakAxisMomentOfInertia = _data["weakAxisMomentOfInertia"] ? UnitValueDto.fromJS(_data["weakAxisMomentOfInertia"]) : new UnitValueDto();
             this.polarMomentOfInertia = _data["polarMomentOfInertia"] ? UnitValueDto.fromJS(_data["polarMomentOfInertia"]) : new UnitValueDto();
+            this.strongAxisShearArea = _data["strongAxisShearArea"] ? UnitValueDto.fromJS(_data["strongAxisShearArea"]) : new UnitValueDto();
+            this.weakAxisShearArea = _data["weakAxisShearArea"] ? UnitValueDto.fromJS(_data["weakAxisShearArea"]) : new UnitValueDto();
         }
     }
 
@@ -1745,20 +2030,26 @@ export class SectionProfileResponse implements ISectionProfileResponse {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
+        data["modelId"] = this.modelId;
         data["area"] = this.area ? this.area.toJSON() : <any>undefined;
         data["strongAxisMomentOfInertia"] = this.strongAxisMomentOfInertia ? this.strongAxisMomentOfInertia.toJSON() : <any>undefined;
         data["weakAxisMomentOfInertia"] = this.weakAxisMomentOfInertia ? this.weakAxisMomentOfInertia.toJSON() : <any>undefined;
         data["polarMomentOfInertia"] = this.polarMomentOfInertia ? this.polarMomentOfInertia.toJSON() : <any>undefined;
+        data["strongAxisShearArea"] = this.strongAxisShearArea ? this.strongAxisShearArea.toJSON() : <any>undefined;
+        data["weakAxisShearArea"] = this.weakAxisShearArea ? this.weakAxisShearArea.toJSON() : <any>undefined;
         return data;
     }
 }
 
 export interface ISectionProfileResponse {
     id: string;
+    modelId: string;
     area: UnitValueDto;
     strongAxisMomentOfInertia: UnitValueDto;
     weakAxisMomentOfInertia: UnitValueDto;
     polarMomentOfInertia: UnitValueDto;
+    strongAxisShearArea: UnitValueDto;
+    weakAxisShearArea: UnitValueDto;
 }
 
 export class SelectedObject implements ISelectedObject {
@@ -1883,6 +2174,7 @@ export class UnitSettingsDtoVerbose implements IUnitSettingsDtoVerbose {
     torqueUnit!: string;
     forcePerLengthUnit!: string;
     pressureUnit!: string;
+    angleUnit!: string;
 
     constructor(data?: IUnitSettingsDtoVerbose) {
         if (data) {
@@ -1903,6 +2195,7 @@ export class UnitSettingsDtoVerbose implements IUnitSettingsDtoVerbose {
             this.torqueUnit = _data["torqueUnit"];
             this.forcePerLengthUnit = _data["forcePerLengthUnit"];
             this.pressureUnit = _data["pressureUnit"];
+            this.angleUnit = _data["angleUnit"];
         }
     }
 
@@ -1923,6 +2216,7 @@ export class UnitSettingsDtoVerbose implements IUnitSettingsDtoVerbose {
         data["torqueUnit"] = this.torqueUnit;
         data["forcePerLengthUnit"] = this.forcePerLengthUnit;
         data["pressureUnit"] = this.pressureUnit;
+        data["angleUnit"] = this.angleUnit;
         return data;
     }
 }
@@ -1936,6 +2230,7 @@ export interface IUnitSettingsDtoVerbose {
     torqueUnit: string;
     forcePerLengthUnit: string;
     pressureUnit: string;
+    angleUnit: string;
 }
 
 export class UnitSettingsResponse implements IUnitSettingsResponse {
