@@ -31,7 +31,6 @@ export class EditorApi implements IEditorApiAlpha {
         this.currentModel = new THREE.Group();
         this.sceneRoot.add(this.currentModel);
     }
-
     async clear(): Promise<Result> {
         this.currentModel.clear();
         return ResultFactory.Success();
@@ -49,10 +48,14 @@ export class EditorApi implements IEditorApiAlpha {
         return ResultFactory.Success();
     }
 
-    async createElement1d(
-        element1DResponse: Element1DResponse
-    ): Promise<Result> {
-        console.log("createElement1d", element1DResponse);
+    createElement1ds(body: Element1DResponse[]): Promise<Result> {
+        body.forEach(async (el) => {
+            await this.createElement1d(el);
+        });
+
+        return Promise.resolve(ResultFactory.Success());
+    }
+    createElement1d(element1DResponse: Element1DResponse): Promise<Result> {
         let startNode = this.sceneRoot.getObjectByProperty(
             "beamOsId",
             element1DResponse.startNodeId
@@ -71,13 +74,12 @@ export class EditorApi implements IEditorApiAlpha {
 
         this.currentModel.add(el);
 
-        return ResultFactory.Success();
+        return Promise.resolve(ResultFactory.Success());
     }
 
     async createModelHydrated(
         modelResponseHydrated: ModelResponseHydrated
     ): Promise<Result> {
-        console.log("createModelHydrated", modelResponseHydrated);
         modelResponseHydrated.nodes.forEach(async (node) => {
             await this.createNode(node);
         });
@@ -87,8 +89,14 @@ export class EditorApi implements IEditorApiAlpha {
         return ResultFactory.Success();
     }
 
+    createNodes(body: NodeResponse[]): Promise<Result> {
+        body.forEach(async (el) => {
+            await this.createNode(el);
+        });
+
+        return Promise.resolve(ResultFactory.Success());
+    }
     createNode(nodeResponse: NodeResponse): Promise<Result> {
-        console.log("createNode", nodeResponse);
         const node = new BeamOsNode(
             nodeResponse.id,
             nodeResponse.locationPoint.xCoordinate.value,
@@ -102,13 +110,27 @@ export class EditorApi implements IEditorApiAlpha {
         return Promise.resolve(ResultFactory.Success());
     }
 
-    createPointLoad(body: PointLoadResponse): Promise<Result> {
-        console.log("createPointLoad", body);
+    createPointLoads(body: PointLoadResponse[]): Promise<Result> {
+        body.forEach(async (el) => {
+            await this.createPointLoad(el);
+        });
 
+        return Promise.resolve(ResultFactory.Success());
+    }
+
+    createPointLoad(body: PointLoadResponse): Promise<Result> {
         const node = this.getObjectByBeamOsId<BeamOsNode>(body.nodeId);
         const pointLoad = new BeamOsPointLoad(body.id, node, body.direction);
 
         this.addObject(pointLoad);
+        return Promise.resolve(ResultFactory.Success());
+    }
+
+    createShearDiagrams(body: ShearDiagramResponse[]): Promise<Result> {
+        body.forEach(async (diagram) => {
+            await this.createShearDiagram(diagram);
+        });
+
         return Promise.resolve(ResultFactory.Success());
     }
 
@@ -123,6 +145,14 @@ export class EditorApi implements IEditorApiAlpha {
         );
 
         this.addObject(shearDiagramResponse);
+        return Promise.resolve(ResultFactory.Success());
+    }
+
+    createMomentDiagrams(body: MomentDiagramResponse[]): Promise<Result> {
+        body.forEach(async (diagram) => {
+            await this.createMomentDiagram(diagram);
+        });
+
         return Promise.resolve(ResultFactory.Success());
     }
 
