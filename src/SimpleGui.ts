@@ -2,8 +2,6 @@ import { Line2 } from "three/addons/lines/Line2.js";
 import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 import { EditorConfigurations } from "./EditorConfigurations";
-import { EditorApi } from "./EditorApi";
-import { Element1DResponse, NodeResponse } from "./EditorApi/EditorApiAlpha";
 // import { INodeResponse, IPointResponse, IRestraintResponse, NodeResponse } from './EditorApi/EditorApiAlpha';
 
 export class SimpleGui {
@@ -18,8 +16,7 @@ export class SimpleGui {
 
     constructor(
         private config: EditorConfigurations,
-        private scene: THREE.Scene,
-        private editorApi: EditorApi,
+        private scene: THREE.Scene
     ) {
         let gui = new GUI();
         let params = {
@@ -32,8 +29,8 @@ export class SimpleGui {
             // 'threshold': raycaster.params.Line2.threshold,
             // 'translation': raycaster.params.Line2.threshold,
             animate: true,
-            addLine: this.addElement1d.bind(this),
-            addNodes: this.addNodes.bind(this),
+            // addLine: this.addElement1d.bind(this),
+            // addNodes: this.addNodes.bind(this),
             startX: this.startX,
             startY: this.startY,
             startZ: this.startZ,
@@ -43,7 +40,7 @@ export class SimpleGui {
         };
 
         gui.add(params, "width", 0.1, 10).onChange(
-            this.changeLineWidth.bind(this),
+            this.changeLineWidth.bind(this)
         );
 
         gui.add(params, "startX");
@@ -52,9 +49,6 @@ export class SimpleGui {
         gui.add(params, "endX");
         gui.add(params, "endY");
         gui.add(params, "endZ");
-
-        gui.add(params, "addNodes");
-        gui.add(params, "addLine");
     }
 
     changeLineWidth(val: number) {
@@ -75,88 +69,10 @@ export class SimpleGui {
 
         let line = new Line2(
             lineGeometry,
-            this.config.defaultElement1dMaterial,
+            this.config.defaultElement1dMaterial
         );
         line.computeLineDistances();
         line.scale.set(1, 1, 1);
         this.scene.add(line);
-    }
-
-    addNodes() {
-        let node1 = {
-            id: "caee582f-caf3-49c8-b7cf-f130e6f1ae77",
-            modelId: "00000000-0000-0000-0000-000000000000",
-            locationPoint: {
-                xCoordinate: {
-                    value: 10,
-                    unit: "Foot",
-                },
-                yCoordinate: {
-                    value: 5,
-                    unit: "Foot",
-                },
-                zCoordinate: {
-                    value: 10,
-                    unit: "Foot",
-                },
-            },
-            restraint: {
-                canTranslateAlongX: true,
-                canTranslateAlongY: true,
-                canTranslateAlongZ: true,
-                canRotateAboutX: true,
-                canRotateAboutY: true,
-                canRotateAboutZ: true,
-            },
-        } as NodeResponse;
-
-        this.editorApi.createNode(node1);
-
-        let node2 = {
-            // "id": "11c7fb66-ff62-49db-b43a-b67862f13246",
-            id: "caee582f-caf3-49c8-b7cf-f130e6f1ae77",
-            modelId: "00000000-0000-0000-0000-000000000000",
-            locationPoint: {
-                xCoordinate: {
-                    value: 10,
-                    unit: "Foot",
-                },
-                yCoordinate: {
-                    value: 15,
-                    unit: "Foot",
-                },
-                zCoordinate: {
-                    value: 10,
-                    unit: "Foot",
-                },
-            },
-            restraint: {
-                canTranslateAlongX: true,
-                canTranslateAlongY: true,
-                canTranslateAlongZ: true,
-                canRotateAboutX: true,
-                canRotateAboutY: true,
-                canRotateAboutZ: true,
-            },
-        } as NodeResponse;
-
-        this.editorApi.createNode(node2);
-    }
-
-    addElement1d() {
-        let element1DResponse = {
-            id: "bff2d04f-e2c8-4972-9137-a0424a3cb50c",
-            modelId: "00000000-0000-0000-0000-000000000000",
-            startNodeId: "caee582f-caf3-49c8-b7cf-f130e6f1ae77",
-            endNodeId: "11c7fb66-ff62-49db-b43a-b67862f13246",
-            materialId: "00000000-0000-0000-0000-000000000000",
-            sectionProfileId: "00000000-0000-0000-0000-000000000000",
-            sectionProfileRotation: {
-                value: 0,
-                unit: "Degree",
-            },
-        } as Element1DResponse;
-
-        this.editorApi.createElement1d(element1DResponse);
     }
 }

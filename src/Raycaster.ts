@@ -85,19 +85,29 @@ export class Raycaster {
     }
 
     getHoverMaterial<T extends THREE.Material>(material: T): T {
+        return Raycaster.GetMaterialCloneWithProvidedColor(
+            material,
+            this.highlightHex
+        );
+    }
+
+    static GetMaterialCloneWithProvidedColor<T extends THREE.Material>(
+        material: T,
+        hex: number
+    ): T {
         if (material instanceof THREE.MeshStandardMaterial) {
             let clone = material.clone() as T & THREE.MeshStandardMaterial;
-            clone.emissive.setHex(this.highlightHex);
+            clone.emissive.setHex(hex);
             return clone;
         }
         if (material instanceof LineMaterial) {
             let clone = material.clone() as T & LineMaterial;
-            clone.color = new THREE.Color(this.highlightHex);
+            clone.color = new THREE.Color(hex);
             return clone;
         }
         if (material instanceof THREE.MeshLambertMaterial) {
             let clone = material.clone() as T & LineMaterial;
-            clone.color = new THREE.Color(this.highlightHex);
+            clone.color = new THREE.Color(hex);
             return clone;
         }
 

@@ -88,6 +88,16 @@ export interface IEditorApiAlpha {
     /**
      * @return OK
      */
+    setColorFilter(body: SetColorFilter): Promise<Result>;
+
+    /**
+     * @return OK
+     */
+    clearFilters(body: ClearFilters): Promise<Result>;
+
+    /**
+     * @return OK
+     */
     reduceChangeSelectionCommand(body: ChangeSelectionCommand): Promise<Result>;
 
     /**
@@ -720,6 +730,88 @@ export class EditorApiAlpha implements IEditorApiAlpha {
     /**
      * @return OK
      */
+    setColorFilter(body: SetColorFilter): Promise<Result> {
+        let url_ = this.baseUrl + "/EditorApiAlpha/SetColorFilter";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSetColorFilter(_response);
+        });
+    }
+
+    protected processSetColorFilter(response: Response): Promise<Result> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = Result.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<Result>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    clearFilters(body: ClearFilters): Promise<Result> {
+        let url_ = this.baseUrl + "/EditorApiAlpha/ClearFilters";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processClearFilters(_response);
+        });
+    }
+
+    protected processClearFilters(response: Response): Promise<Result> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = Result.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<Result>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
     reduceChangeSelectionCommand(body: ChangeSelectionCommand): Promise<Result> {
         let url_ = this.baseUrl + "/EditorApiAlpha/ReduceChangeSelectionCommand";
         url_ = url_.replace(/[?&]$/, "");
@@ -927,6 +1019,57 @@ export interface IChangeSelectionCommand {
     selectedObjects: SelectedObject[];
 }
 
+export class ClearFilters implements IClearFilters {
+    beamOsIds!: string[];
+    colorAllOthers!: boolean;
+
+    constructor(data?: IClearFilters) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        if (!data) {
+            this.beamOsIds = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["beamOsIds"])) {
+                this.beamOsIds = [] as any;
+                for (let item of _data["beamOsIds"])
+                    this.beamOsIds!.push(item);
+            }
+            this.colorAllOthers = _data["colorAllOthers"];
+        }
+    }
+
+    static fromJS(data: any): ClearFilters {
+        data = typeof data === 'object' ? data : {};
+        let result = new ClearFilters();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.beamOsIds)) {
+            data["beamOsIds"] = [];
+            for (let item of this.beamOsIds)
+                data["beamOsIds"].push(item);
+        }
+        data["colorAllOthers"] = this.colorAllOthers;
+        return data;
+    }
+}
+
+export interface IClearFilters {
+    beamOsIds: string[];
+    colorAllOthers: boolean;
+}
+
 export enum ClientActionSource {
     _0 = 0,
     _1 = 1,
@@ -1042,6 +1185,7 @@ export class Element1DResponse implements IElement1DResponse {
     materialId!: string;
     sectionProfileId!: string;
     sectionProfileRotation!: UnitValueDto;
+    customData?: { [key: string]: any; } | undefined;
 
     constructor(data?: IElement1DResponse) {
         if (data) {
@@ -1064,6 +1208,13 @@ export class Element1DResponse implements IElement1DResponse {
             this.materialId = _data["materialId"];
             this.sectionProfileId = _data["sectionProfileId"];
             this.sectionProfileRotation = _data["sectionProfileRotation"] ? UnitValueDto.fromJS(_data["sectionProfileRotation"]) : new UnitValueDto();
+            if (_data["customData"]) {
+                this.customData = {} as any;
+                for (let key in _data["customData"]) {
+                    if (_data["customData"].hasOwnProperty(key))
+                        (<any>this.customData)![key] = _data["customData"][key];
+                }
+            }
         }
     }
 
@@ -1083,6 +1234,13 @@ export class Element1DResponse implements IElement1DResponse {
         data["materialId"] = this.materialId;
         data["sectionProfileId"] = this.sectionProfileId;
         data["sectionProfileRotation"] = this.sectionProfileRotation ? this.sectionProfileRotation.toJSON() : <any>undefined;
+        if (this.customData) {
+            data["customData"] = {};
+            for (let key in this.customData) {
+                if (this.customData.hasOwnProperty(key))
+                    (<any>data["customData"])[key] = (<any>this.customData)[key];
+            }
+        }
         return data;
     }
 }
@@ -1095,6 +1253,7 @@ export interface IElement1DResponse {
     materialId: string;
     sectionProfileId: string;
     sectionProfileRotation: UnitValueDto;
+    customData?: { [key: string]: any; } | undefined;
 }
 
 export enum Element1dAnalysisType {
@@ -1105,6 +1264,7 @@ export enum Element1dAnalysisType {
 
 export class MaterialResponse implements IMaterialResponse {
     id!: string;
+    modelId!: string;
     modulusOfElasticity!: UnitValueDto;
     modulusOfRigidity!: UnitValueDto;
 
@@ -1124,6 +1284,7 @@ export class MaterialResponse implements IMaterialResponse {
     init(_data?: any) {
         if (_data) {
             this.id = _data["id"];
+            this.modelId = _data["modelId"];
             this.modulusOfElasticity = _data["modulusOfElasticity"] ? UnitValueDto.fromJS(_data["modulusOfElasticity"]) : new UnitValueDto();
             this.modulusOfRigidity = _data["modulusOfRigidity"] ? UnitValueDto.fromJS(_data["modulusOfRigidity"]) : new UnitValueDto();
         }
@@ -1139,6 +1300,7 @@ export class MaterialResponse implements IMaterialResponse {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
+        data["modelId"] = this.modelId;
         data["modulusOfElasticity"] = this.modulusOfElasticity ? this.modulusOfElasticity.toJSON() : <any>undefined;
         data["modulusOfRigidity"] = this.modulusOfRigidity ? this.modulusOfRigidity.toJSON() : <any>undefined;
         return data;
@@ -1147,6 +1309,7 @@ export class MaterialResponse implements IMaterialResponse {
 
 export interface IMaterialResponse {
     id: string;
+    modelId: string;
     modulusOfElasticity: UnitValueDto;
     modulusOfRigidity: UnitValueDto;
 }
@@ -1570,6 +1733,7 @@ export interface IMomentDiagramResponse {
 
 export class MomentLoadResponse implements IMomentLoadResponse {
     id!: string;
+    modelId!: string;
     nodeId!: string;
     torque!: UnitValueDto;
     axisDirection!: Vector3;
@@ -1590,6 +1754,7 @@ export class MomentLoadResponse implements IMomentLoadResponse {
     init(_data?: any) {
         if (_data) {
             this.id = _data["id"];
+            this.modelId = _data["modelId"];
             this.nodeId = _data["nodeId"];
             this.torque = _data["torque"] ? UnitValueDto.fromJS(_data["torque"]) : new UnitValueDto();
             this.axisDirection = _data["axisDirection"] ? Vector3.fromJS(_data["axisDirection"]) : new Vector3();
@@ -1606,6 +1771,7 @@ export class MomentLoadResponse implements IMomentLoadResponse {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
+        data["modelId"] = this.modelId;
         data["nodeId"] = this.nodeId;
         data["torque"] = this.torque ? this.torque.toJSON() : <any>undefined;
         data["axisDirection"] = this.axisDirection ? this.axisDirection.toJSON() : <any>undefined;
@@ -1615,6 +1781,7 @@ export class MomentLoadResponse implements IMomentLoadResponse {
 
 export interface IMomentLoadResponse {
     id: string;
+    modelId: string;
     nodeId: string;
     torque: UnitValueDto;
     axisDirection: Vector3;
@@ -1679,8 +1846,9 @@ export interface IMoveNodeCommand {
 export class NodeResponse implements INodeResponse {
     id!: string;
     modelId!: string;
-    locationPoint!: PointResponse;
-    restraint!: RestraintResponse;
+    locationPoint!: Point;
+    restraint!: RestraintContract;
+    customData?: { [key: string]: any; } | undefined;
 
     constructor(data?: INodeResponse) {
         if (data) {
@@ -1690,8 +1858,8 @@ export class NodeResponse implements INodeResponse {
             }
         }
         if (!data) {
-            this.locationPoint = new PointResponse();
-            this.restraint = new RestraintResponse();
+            this.locationPoint = new Point();
+            this.restraint = new RestraintContract();
         }
     }
 
@@ -1699,8 +1867,15 @@ export class NodeResponse implements INodeResponse {
         if (_data) {
             this.id = _data["id"];
             this.modelId = _data["modelId"];
-            this.locationPoint = _data["locationPoint"] ? PointResponse.fromJS(_data["locationPoint"]) : new PointResponse();
-            this.restraint = _data["restraint"] ? RestraintResponse.fromJS(_data["restraint"]) : new RestraintResponse();
+            this.locationPoint = _data["locationPoint"] ? Point.fromJS(_data["locationPoint"]) : new Point();
+            this.restraint = _data["restraint"] ? RestraintContract.fromJS(_data["restraint"]) : new RestraintContract();
+            if (_data["customData"]) {
+                this.customData = {} as any;
+                for (let key in _data["customData"]) {
+                    if (_data["customData"].hasOwnProperty(key))
+                        (<any>this.customData)![key] = _data["customData"][key];
+                }
+            }
         }
     }
 
@@ -1717,6 +1892,13 @@ export class NodeResponse implements INodeResponse {
         data["modelId"] = this.modelId;
         data["locationPoint"] = this.locationPoint ? this.locationPoint.toJSON() : <any>undefined;
         data["restraint"] = this.restraint ? this.restraint.toJSON() : <any>undefined;
+        if (this.customData) {
+            data["customData"] = {};
+            for (let key in this.customData) {
+                if (this.customData.hasOwnProperty(key))
+                    (<any>data["customData"])[key] = (<any>this.customData)[key];
+            }
+        }
         return data;
     }
 }
@@ -1724,8 +1906,9 @@ export class NodeResponse implements INodeResponse {
 export interface INodeResponse {
     id: string;
     modelId: string;
-    locationPoint: PointResponse;
-    restraint: RestraintResponse;
+    locationPoint: Point;
+    restraint: RestraintContract;
+    customData?: { [key: string]: any; } | undefined;
 }
 
 export class PhysicalModelSettings implements IPhysicalModelSettings {
@@ -1774,6 +1957,54 @@ export interface IPhysicalModelSettings {
     unitSettings: UnitSettingsDtoVerbose;
     analysisSettings: AnalysisSettingsContract;
     yAxisUp: boolean;
+}
+
+export class Point implements IPoint {
+    xCoordinate!: number;
+    yCoordinate!: number;
+    zCoordinate!: number;
+    lengthUnit!: string;
+
+    constructor(data?: IPoint) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.xCoordinate = _data["xCoordinate"];
+            this.yCoordinate = _data["yCoordinate"];
+            this.zCoordinate = _data["zCoordinate"];
+            this.lengthUnit = _data["lengthUnit"];
+        }
+    }
+
+    static fromJS(data: any): Point {
+        data = typeof data === 'object' ? data : {};
+        let result = new Point();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["xCoordinate"] = this.xCoordinate;
+        data["yCoordinate"] = this.yCoordinate;
+        data["zCoordinate"] = this.zCoordinate;
+        data["lengthUnit"] = this.lengthUnit;
+        return data;
+    }
+}
+
+export interface IPoint {
+    xCoordinate: number;
+    yCoordinate: number;
+    zCoordinate: number;
+    lengthUnit: string;
 }
 
 export class PointLoadResponse implements IPointLoadResponse {
@@ -1832,56 +2063,7 @@ export interface IPointLoadResponse {
     direction: Vector3;
 }
 
-export class PointResponse implements IPointResponse {
-    xCoordinate!: UnitValueDto;
-    yCoordinate!: UnitValueDto;
-    zCoordinate!: UnitValueDto;
-
-    constructor(data?: IPointResponse) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-        if (!data) {
-            this.xCoordinate = new UnitValueDto();
-            this.yCoordinate = new UnitValueDto();
-            this.zCoordinate = new UnitValueDto();
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.xCoordinate = _data["xCoordinate"] ? UnitValueDto.fromJS(_data["xCoordinate"]) : new UnitValueDto();
-            this.yCoordinate = _data["yCoordinate"] ? UnitValueDto.fromJS(_data["yCoordinate"]) : new UnitValueDto();
-            this.zCoordinate = _data["zCoordinate"] ? UnitValueDto.fromJS(_data["zCoordinate"]) : new UnitValueDto();
-        }
-    }
-
-    static fromJS(data: any): PointResponse {
-        data = typeof data === 'object' ? data : {};
-        let result = new PointResponse();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["xCoordinate"] = this.xCoordinate ? this.xCoordinate.toJSON() : <any>undefined;
-        data["yCoordinate"] = this.yCoordinate ? this.yCoordinate.toJSON() : <any>undefined;
-        data["zCoordinate"] = this.zCoordinate ? this.zCoordinate.toJSON() : <any>undefined;
-        return data;
-    }
-}
-
-export interface IPointResponse {
-    xCoordinate: UnitValueDto;
-    yCoordinate: UnitValueDto;
-    zCoordinate: UnitValueDto;
-}
-
-export class RestraintResponse implements IRestraintResponse {
+export class RestraintContract implements IRestraintContract {
     canTranslateAlongX!: boolean;
     canTranslateAlongY!: boolean;
     canTranslateAlongZ!: boolean;
@@ -1889,7 +2071,7 @@ export class RestraintResponse implements IRestraintResponse {
     canRotateAboutY!: boolean;
     canRotateAboutZ!: boolean;
 
-    constructor(data?: IRestraintResponse) {
+    constructor(data?: IRestraintContract) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -1909,9 +2091,9 @@ export class RestraintResponse implements IRestraintResponse {
         }
     }
 
-    static fromJS(data: any): RestraintResponse {
+    static fromJS(data: any): RestraintContract {
         data = typeof data === 'object' ? data : {};
-        let result = new RestraintResponse();
+        let result = new RestraintContract();
         result.init(data);
         return result;
     }
@@ -1928,7 +2110,7 @@ export class RestraintResponse implements IRestraintResponse {
     }
 }
 
-export interface IRestraintResponse {
+export interface IRestraintContract {
     canTranslateAlongX: boolean;
     canTranslateAlongY: boolean;
     canTranslateAlongZ: boolean;
@@ -2090,6 +2272,65 @@ export class SelectedObject implements ISelectedObject {
 export interface ISelectedObject {
     id: string;
     typeName: string;
+}
+
+export class SetColorFilter implements ISetColorFilter {
+    beamOsIds!: string[];
+    colorAllOthers!: boolean;
+    colorHex!: string;
+    ghost!: boolean;
+
+    constructor(data?: ISetColorFilter) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        if (!data) {
+            this.beamOsIds = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["beamOsIds"])) {
+                this.beamOsIds = [] as any;
+                for (let item of _data["beamOsIds"])
+                    this.beamOsIds!.push(item);
+            }
+            this.colorAllOthers = _data["colorAllOthers"];
+            this.colorHex = _data["colorHex"];
+            this.ghost = _data["ghost"];
+        }
+    }
+
+    static fromJS(data: any): SetColorFilter {
+        data = typeof data === 'object' ? data : {};
+        let result = new SetColorFilter();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.beamOsIds)) {
+            data["beamOsIds"] = [];
+            for (let item of this.beamOsIds)
+                data["beamOsIds"].push(item);
+        }
+        data["colorAllOthers"] = this.colorAllOthers;
+        data["colorHex"] = this.colorHex;
+        data["ghost"] = this.ghost;
+        return data;
+    }
+}
+
+export interface ISetColorFilter {
+    beamOsIds: string[];
+    colorAllOthers: boolean;
+    colorHex: string;
+    ghost: boolean;
 }
 
 export class ShearDiagramResponse implements IShearDiagramResponse {

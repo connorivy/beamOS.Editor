@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import {
     ChangeSelectionCommand,
+    ClearFilters,
     Element1DResponse,
     IEditorApiAlpha,
     ModelResponse,
@@ -12,6 +13,7 @@ import {
     PhysicalModelSettings,
     PointLoadResponse,
     Result,
+    SetColorFilter,
     ShearDiagramResponse,
 } from "./EditorApi/EditorApiAlpha";
 import { EditorConfigurations } from "./EditorConfigurations";
@@ -20,6 +22,7 @@ import { BeamOsNode } from "./SceneObjects/BeamOsNode";
 import { BeamOsElement1d } from "./SceneObjects/BeamOsElement1d";
 import { BeamOsPointLoad } from "./SceneObjects/BeamOsPointLoad";
 import { BeamOsDiagram } from "./SceneObjects/BeamOsDiagram";
+import { IBeamOsMesh } from "./BeamOsMesh";
 
 export class EditorApi implements IEditorApiAlpha {
     private currentModel: THREE.Group;
@@ -31,6 +34,7 @@ export class EditorApi implements IEditorApiAlpha {
         this.currentModel = new THREE.Group();
         this.sceneRoot.add(this.currentModel);
     }
+
     async clear(): Promise<Result> {
         this.currentModel.clear();
         return ResultFactory.Success();
@@ -97,16 +101,31 @@ export class EditorApi implements IEditorApiAlpha {
         return Promise.resolve(ResultFactory.Success());
     }
     createNode(nodeResponse: NodeResponse): Promise<Result> {
-        const node = new BeamOsNode(
-            nodeResponse.id,
-            nodeResponse.locationPoint.xCoordinate.value,
-            nodeResponse.locationPoint.yCoordinate.value,
-            nodeResponse.locationPoint.zCoordinate.value,
-            nodeResponse.restraint,
-            this.config.yAxisUp
-        );
+        let node = this.sceneRoot.getObjectByProperty(
+            "beamOsId",
+            nodeResponse.id
+        ) as BeamOsNode;
 
-        this.addObject(node);
+        if (node != null) {
+            node.xCoordinate = nodeResponse.locationPoint.xCoordinate;
+            node.yCoordinate = nodeResponse.locationPoint.yCoordinate;
+            node.zCoordinate = nodeResponse.locationPoint.zCoordinate;
+            node.setMeshPositionFromCoordinates();
+            node.firePositionChangedEvent();
+
+            node.restraint = nodeResponse.restraint;
+        } else {
+            node = new BeamOsNode(
+                nodeResponse.id,
+                nodeResponse.locationPoint.xCoordinate,
+                nodeResponse.locationPoint.yCoordinate,
+                nodeResponse.locationPoint.zCoordinate,
+                nodeResponse.restraint,
+                this.config.yAxisUp
+            );
+
+            this.addObject(node);
+        }
         return Promise.resolve(ResultFactory.Success());
     }
 
@@ -167,6 +186,48 @@ export class EditorApi implements IEditorApiAlpha {
         );
 
         this.addObject(shearDiagramResponse);
+        return Promise.resolve(ResultFactory.Success());
+    }
+
+    setColorFilter(body: SetColorFilter): Promise<Result> {
+        let ids: string[];
+        if (!body.colorAllOthers) {
+            ids = body.beamOsIds;
+        } else {
+            ids = [];
+            this.currentModel.children.forEach((obj) => {
+                const beamOsId = (<IBeamOsMesh>(<any>obj)).beamOsId;
+                if (!body.beamOsIds.includes(beamOsId)) {
+                    ids.push(beamOsId);
+                }
+            });
+        }
+        ids.forEach((id) => {
+            const el = this.getObjectByBeamOsId<IBeamOsMesh>(id);
+            el.SetColorFilter(parseInt(body.colorHex), body.ghost);
+        });
+
+        return Promise.resolve(ResultFactory.Success());
+    }
+
+    clearFilters(body: ClearFilters): Promise<Result> {
+        let ids: string[];
+        if (!body.colorAllOthers) {
+            ids = body.beamOsIds;
+        } else {
+            ids = [];
+            this.currentModel.children.forEach((obj) => {
+                const beamOsId = (<IBeamOsMesh>(<any>obj)).beamOsId;
+                if (!body.beamOsIds.includes(beamOsId)) {
+                    ids.push(beamOsId);
+                }
+            });
+        }
+        ids.forEach((id) => {
+            const el = this.getObjectByBeamOsId<IBeamOsMesh>(id);
+            el.RemoveColorFilter();
+        });
+
         return Promise.resolve(ResultFactory.Success());
     }
 

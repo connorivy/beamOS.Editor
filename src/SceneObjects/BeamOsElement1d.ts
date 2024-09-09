@@ -12,6 +12,7 @@ export class BeamOsElement1d extends Line2 implements IBeamOsMesh {
     public static lineThickness: number = 0.1;
     public beamOsObjectType: string = "Element1d";
     private onNodeMovedFunc: (_event: any) => void;
+    private previousMaterial: LineMaterial | undefined;
 
     constructor(
         public beamOsId: string,
@@ -29,6 +30,33 @@ export class BeamOsElement1d extends Line2 implements IBeamOsMesh {
 
         startNode.addEventListener("moved", this.onNodeMovedFunc);
         endNode.addEventListener("moved", this.onNodeMovedFunc);
+    }
+
+    public SetColorFilter(color: number, ghost: boolean) {
+        this.previousMaterial = this.material;
+        const copy = new LineMaterial({
+            color: color,
+            linewidth: this.material.linewidth,
+            worldUnits: true,
+            // transparent: true,
+            // opacity: 0.2,
+            depthTest: false,
+        });
+        if (ghost) {
+            copy.opacity = 0.2;
+            copy.transparent = true;
+        }
+        this.material = copy;
+    }
+
+    public RemoveColorFilter() {
+        if (this.previousMaterial == undefined) {
+            throw new Error(
+                "Trying to unghost, but previous material is undefined"
+            );
+        }
+        this.material = this.previousMaterial;
+        this.previousMaterial = undefined;
     }
 
     onNodeMoved(_event: any) {
