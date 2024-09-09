@@ -122,12 +122,13 @@ export class BeamOsEditor {
         this.scene.background = new THREE.Color(0x333333);
         this.scene.matrixWorldAutoUpdate = true;
 
-        window.addEventListener(
-            "resize",
-            this.resizeCanvasToDisplaySize.bind(this)
-        );
-        window.dispatchEvent(new Event("resize"));
-        // this.renderer.setSize( window.innerWidth, window.innerHeight );
+        const callback = this.resizeCanvasToDisplaySize.bind(this);
+        const observer = new ResizeObserver((entries) => {
+            const width = entries[0].contentRect.width;
+            const height = entries[0].contentRect.height;
+            callback(width, height);
+        });
+        observer.observe(this.domElement);
 
         const grid = new THREE.Group();
 
@@ -144,25 +145,17 @@ export class BeamOsEditor {
         this.scene.add(grid);
     }
 
-    resizeCanvasToDisplaySize(_event: Event) {
-        const canvas = this.renderer.domElement;
-        // look up the size the canvas is being displayed
-        const width = canvas.clientWidth;
-        const height = canvas.clientHeight;
+    resizeCanvasToDisplaySize(width: number, height: number) {
+        // you must pass false here or three.js sadly fights the browser
+        this.renderer.setSize(width, height, false);
+        this.camera.aspect = width / height;
+        this.camera.updateProjectionMatrix();
 
-        // adjust displayBuffer size to match
-        if (canvas.width != width || canvas.height != height) {
-            // you must pass false here or three.js sadly fights the browser
-            this.renderer.setSize(width, height, false);
-            this.camera.aspect = width / height;
-            this.camera.updateProjectionMatrix();
-
-            // set matLine resolution
-            this.editorConfigurations.defaultElement1dMaterial.resolution.set(
-                width,
-                height
-            );
-        }
+        // set matLine resolution
+        this.editorConfigurations.defaultElement1dMaterial.resolution.set(
+            width,
+            height
+        );
     }
 
     public animate() {

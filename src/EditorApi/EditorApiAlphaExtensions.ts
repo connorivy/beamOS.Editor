@@ -1,4 +1,4 @@
-import { BeamOsError, RestraintResponse, Result } from "./EditorApiAlpha";
+import { BeamOsError, RestraintContract, Result } from "./EditorApiAlpha";
 
 export class BeamOsErrorFactory {
     static None(): BeamOsError {
@@ -25,8 +25,8 @@ export class ResultFactory {
     }
 }
 
-export class RestraintResponseUtils {
-    static GetRestraintType(restraint: RestraintResponse): RestraintType {
+export class RestraintContractUtils {
+    static GetRestraintType(restraint: RestraintContract): RestraintType {
         if (
             !restraint.canTranslateAlongX &&
             !restraint.canTranslateAlongY &&
