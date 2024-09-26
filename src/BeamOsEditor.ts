@@ -21,6 +21,8 @@ export class BeamOsEditor {
     transformController: TransformController;
     selector: Selector;
     public api: EditorApi;
+    animationFrameId: number | undefined = undefined;
+    observer: ResizeObserver;
 
     constructor(
         public domElement: HTMLElement,
@@ -92,6 +94,14 @@ export class BeamOsEditor {
 
         this.api = new EditorApi(this.sceneRoot, editorConfigurations);
 
+        const callback = this.resizeCanvasToDisplaySize.bind(this);
+        this.observer = new ResizeObserver((entries) => {
+            const width = entries[0].contentRect.width;
+            const height = entries[0].contentRect.height;
+            callback(width, height);
+        });
+        this.observer.observe(this.domElement);
+
         this.initCanvas();
         // this.initGui();
         //let simpleGui = new SimpleGui(this.editorConfigurations, this.scene, this.api);
@@ -122,14 +132,6 @@ export class BeamOsEditor {
         this.scene.background = new THREE.Color(0x333333);
         this.scene.matrixWorldAutoUpdate = true;
 
-        const callback = this.resizeCanvasToDisplaySize.bind(this);
-        const observer = new ResizeObserver((entries) => {
-            const width = entries[0].contentRect.width;
-            const height = entries[0].contentRect.height;
-            callback(width, height);
-        });
-        observer.observe(this.domElement);
-
         const grid = new THREE.Group();
 
         const grid1 = new THREE.GridHelper(30, 30, 0x282828);
@@ -159,7 +161,7 @@ export class BeamOsEditor {
     }
 
     public animate() {
-        requestAnimationFrame(this.animate.bind(this));
+        this.animationFrameId = requestAnimationFrame(this.animate.bind(this));
 
         this.selector.animate();
 
@@ -170,5 +172,28 @@ export class BeamOsEditor {
         this.renderer.render(this.scene, this.camera);
 
         this.raycaster.raycast();
+    }
+
+    public dispose() {
+        this.observer.disconnect();
+        this.observer.unobserve(this.domElement);
+
+        // very important to cancel the animation loop
+        // or else the model will not be freed up and garbage collected which will lead to a huge memory leak
+        if (this.animationFrameId == undefined) {
+            throw new Error("animationFrameId was undefined");
+        }
+        cancelAnimationFrame(this.animationFrameId);
+
+        // while the above worked most of the time, sometimes the memory leak persisted.
+        // this snippet of clearing the scene objects helps too
+        this.scene.traverse((object) => {
+            if (object instanceof THREE.Group) {
+                object.clear();
+            }
+        });
+
+        // unsure if this is necessary
+        this.renderer.dispose();
     }
 }
