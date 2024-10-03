@@ -1,12 +1,12 @@
 import * as THREE from "three";
 import {
+    AnalyticalResultsResponse,
     ChangeSelectionCommand,
     ClearFilters,
     Element1DResponse,
     IEditorApiAlpha,
     ModelResponse,
     ModelResponseHydrated,
-    ModelResultResponse,
     MomentDiagramResponse,
     MoveNodeCommand,
     NodeResponse,
@@ -26,19 +26,29 @@ import { IBeamOsMesh } from "./BeamOsMesh";
 
 export class EditorApi implements IEditorApiAlpha {
     private currentModel: THREE.Group;
+    private currentOverlay: THREE.Group;
 
     constructor(
         private sceneRoot: THREE.Group,
         private config: EditorConfigurations
     ) {
         this.currentModel = new THREE.Group();
+        this.currentOverlay = new THREE.Group();
         this.sceneRoot.add(this.currentModel);
+        this.sceneRoot.add(this.currentOverlay);
     }
 
-    async clear(): Promise<Result> {
-        this.currentModel.clear();
-        return ResultFactory.Success();
+    clearCurrentOverlay(): Promise<Result> {
+        this.currentOverlay.clear();
+        return Promise.resolve(ResultFactory.Success());
     }
+
+    clear(): Promise<Result> {
+        this.currentModel.clear();
+        this.currentOverlay.clear();
+        return Promise.resolve(ResultFactory.Success());
+    }
+
     async createModel(modelResponse: ModelResponse): Promise<Result> {
         modelResponse.nodes?.forEach(async (node) => {
             await this.createNode(node);
@@ -146,6 +156,7 @@ export class EditorApi implements IEditorApiAlpha {
     }
 
     createShearDiagrams(body: ShearDiagramResponse[]): Promise<Result> {
+        this.currentOverlay.clear();
         body.forEach(async (diagram) => {
             await this.createShearDiagram(diagram);
         });
@@ -163,11 +174,12 @@ export class EditorApi implements IEditorApiAlpha {
             this.config.maxShearMagnitude
         );
 
-        this.addObject(shearDiagramResponse);
+        this.currentOverlay.add(shearDiagramResponse);
         return Promise.resolve(ResultFactory.Success());
     }
 
     createMomentDiagrams(body: MomentDiagramResponse[]): Promise<Result> {
+        this.currentOverlay.clear();
         body.forEach(async (diagram) => {
             await this.createMomentDiagram(diagram);
         });
@@ -185,7 +197,7 @@ export class EditorApi implements IEditorApiAlpha {
             this.config.maxMomentMagnitude
         );
 
-        this.addObject(shearDiagramResponse);
+        this.currentOverlay.add(shearDiagramResponse);
         return Promise.resolve(ResultFactory.Success());
     }
 
@@ -231,7 +243,10 @@ export class EditorApi implements IEditorApiAlpha {
         return Promise.resolve(ResultFactory.Success());
     }
 
-    setModelResults(body: ModelResultResponse): Promise<Result> {
+    setModelResults(body: AnalyticalResultsResponse): Promise<Result> {
+        if (!body) {
+            return Promise.resolve(ResultFactory.Success());
+        }
         this.config.maxShearMagnitude = Math.max(
             body.maxShear.value,
             Math.abs(body.minShear.value)

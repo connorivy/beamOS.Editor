@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { BeamOsMesh } from "../BeamOsMesh";
-import { DiagramConsistantIntervalResponse } from "../EditorApi/EditorApiAlpha";
+import { DiagramConsistentIntervalResponse } from "../EditorApi/EditorApiAlpha";
 import { BeamOsElement1d } from "./BeamOsElement1d";
 
 export interface DiagramEventMap extends THREE.Object3DEventMap {
@@ -17,7 +17,7 @@ export class BeamOsDiagram extends BeamOsMesh<
 
     constructor(
         public beamOsId: string,
-        intervals: DiagramConsistantIntervalResponse[],
+        intervals: DiagramConsistentIntervalResponse[],
         element1d: BeamOsElement1d,
         yAxisUp: boolean,
         maxValue: number
@@ -62,11 +62,11 @@ export class BeamOsDiagram extends BeamOsMesh<
     }
 
     static GetGeometry(
-        intervals: DiagramConsistantIntervalResponse[],
+        intervals: DiagramConsistentIntervalResponse[],
         element1d: BeamOsElement1d,
         maxValue: number
     ): THREE.BufferGeometry {
-        let valueMult = 0.7 / maxValue;
+        let maxValueMult = 1 / maxValue;
 
         const point3dArr = new Array<number>();
 
@@ -102,7 +102,7 @@ export class BeamOsDiagram extends BeamOsMesh<
                 point3dArr.push(previousX * worldRangeScalingFactor, 0, 0);
                 point3dArr.push(
                     previousX * worldRangeScalingFactor,
-                    prevEval * valueMult,
+                    prevEval * maxValueMult,
                     0
                 );
                 point3dArr.push(currentX * worldRangeScalingFactor, 0, 0);
@@ -111,12 +111,12 @@ export class BeamOsDiagram extends BeamOsMesh<
                 point3dArr.push(currentX * worldRangeScalingFactor, 0, 0);
                 point3dArr.push(
                     previousX * worldRangeScalingFactor,
-                    prevEval * valueMult,
+                    prevEval * maxValueMult,
                     0
                 );
                 point3dArr.push(
                     currentX * worldRangeScalingFactor,
-                    currentEval * valueMult,
+                    currentEval * maxValueMult,
                     0
                 );
             }
@@ -147,7 +147,7 @@ export class BeamOsDiagram extends BeamOsMesh<
     }
 
     static GetHighestValue(
-        intervals: DiagramConsistantIntervalResponse[]
+        intervals: DiagramConsistentIntervalResponse[]
     ): number {
         let highest = 0;
 
