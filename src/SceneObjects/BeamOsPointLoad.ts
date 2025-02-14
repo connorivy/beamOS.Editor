@@ -13,7 +13,8 @@ export class BeamOsPointLoad extends BeamOsMesh<
     THREE.Material,
     PointLoadEventMap
 > {
-    public beamOsObjectType: string = "PointLoad";
+    public static beamOsObjectType: string = "PointLoad";
+    // public beamOsObjectType: string = "PointLoad";
     private onNodeMovedFunc: (_event: any) => void;
 
     private static PointLoadHex: number = 0xe3963e;
@@ -27,12 +28,13 @@ export class BeamOsPointLoad extends BeamOsMesh<
     public static pointLoadGeometry: THREE.BufferGeometry = this.GetGeometry();
 
     constructor(
-        public beamOsId: string,
+        id: number,
         private node: BeamOsNode,
         private direction: Vector3
     ) {
         super(
-            beamOsId,
+            id,
+            "PointLoad",
             BeamOsPointLoad.pointLoadGeometry,
             new THREE.MeshLambertMaterial({
                 color: BeamOsPointLoad.PointLoadHex,

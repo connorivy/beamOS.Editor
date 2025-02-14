@@ -6,7 +6,8 @@ export interface IBeamOsMesh<
     TMaterial extends THREE.Material = THREE.Material
 > {
     id: number;
-    beamOsId: string;
+    beamOsId: number;
+    beamOsUniqueId: string;
     beamOsObjectType: string;
     geometry: TGeometry;
     material: TMaterial;
@@ -22,15 +23,17 @@ export abstract class BeamOsMesh<
     extends THREE.Mesh<TGeometry, TMaterial, TEventMap>
     implements IBeamOsMesh
 {
-    public abstract beamOsObjectType: string;
     private previousMaterial: TMaterial | undefined;
+    public beamOsUniqueId: string;
 
     constructor(
-        public beamOsId: string,
+        public beamOsId: number,
+        public beamOsObjectType: string,
         geometry?: TGeometry,
         material?: TMaterial
     ) {
         super(geometry, material);
+        this.beamOsUniqueId = this.beamOsObjectType + beamOsId;
     }
 
     public SetColorFilter(color: number, ghost: boolean) {

@@ -14,17 +14,18 @@ export class BeamOsDistributedLoad extends BeamOsMesh<
     THREE.Material,
     DistributedLoadEventMap
 > {
-    public beamOsObjectType: string = "DistributedLoad";
+    public static beamOsObjectType: string = "DistributedLoad";
 
     private static DistributedLoadHex: number = 0x00ff00;
 
     constructor(
-        public beamOsId: string,
+        public beamOsId: number,
         shearDiagramResponse: ShearDiagramResponse,
         element1d: BeamOsElement1d
     ) {
         super(
             beamOsId,
+            BeamOsDistributedLoad.beamOsObjectType,
             BeamOsDistributedLoad.GetGeometry(shearDiagramResponse, element1d),
             new THREE.MeshLambertMaterial({
                 color: BeamOsDistributedLoad.DistributedLoadHex,

@@ -1,20 +1,25 @@
 import * as THREE from "three";
 import {
-    AnalyticalResultsResponse,
+    // AnalyticalResultsResponse,
     ChangeSelectionCommand,
-    ClearFilters,
-    Element1DResponse,
+    // ClearFilters,
+    Element1dResponse,
     IEditorApiAlpha,
     ModelResponse,
-    ModelResponseHydrated,
-    MomentDiagramResponse,
+    IModelEntity,
+    // ModelResponseHydrated,
+    // MomentDiagramResponse,
     MoveNodeCommand,
     NodeResponse,
     PhysicalModelSettings,
     PointLoadResponse,
     Result,
-    SetColorFilter,
+    DeflectionDiagramResponse,
+    MomentDiagramResponse,
     ShearDiagramResponse,
+    GlobalStresses,
+    // SetColorFilter,
+    // ShearDiagramResponse,
 } from "./EditorApi/EditorApiAlpha";
 import { EditorConfigurations } from "./EditorConfigurations";
 import { ResultFactory } from "./EditorApi/EditorApiAlphaExtensions";
@@ -22,7 +27,9 @@ import { BeamOsNode } from "./SceneObjects/BeamOsNode";
 import { BeamOsElement1d } from "./SceneObjects/BeamOsElement1d";
 import { BeamOsPointLoad } from "./SceneObjects/BeamOsPointLoad";
 import { BeamOsDiagram } from "./SceneObjects/BeamOsDiagram";
-import { IBeamOsMesh } from "./BeamOsMesh";
+import { BeamOsDiagramByPoints } from "./SceneObjects/BeamOsDiagramByPoints";
+// import { BeamOsDiagram } from "./SceneObjects/BeamOsDiagram";
+// import { IBeamOsMesh } from "./BeamOsMesh";
 
 export class EditorApi implements IEditorApiAlpha {
     private currentModel: THREE.Group;
@@ -37,7 +44,6 @@ export class EditorApi implements IEditorApiAlpha {
         this.sceneRoot.add(this.currentModel);
         this.sceneRoot.add(this.currentOverlay);
     }
-
     clearCurrentOverlay(): Promise<Result> {
         this.currentOverlay.clear();
         return Promise.resolve(ResultFactory.Success());
@@ -62,25 +68,25 @@ export class EditorApi implements IEditorApiAlpha {
         return ResultFactory.Success();
     }
 
-    createElement1ds(body: Element1DResponse[]): Promise<Result> {
+    createElement1ds(body: Element1dResponse[]): Promise<Result> {
         body.forEach(async (el) => {
             await this.createElement1d(el);
         });
 
         return Promise.resolve(ResultFactory.Success());
     }
-    createElement1d(element1DResponse: Element1DResponse): Promise<Result> {
+    createElement1d(Element1dResponse: Element1dResponse): Promise<Result> {
         let startNode = this.sceneRoot.getObjectByProperty(
             "beamOsId",
-            element1DResponse.startNodeId
+            Element1dResponse.startNodeId
         ) as BeamOsNode;
         let endNode = this.sceneRoot.getObjectByProperty(
             "beamOsId",
-            element1DResponse.endNodeId
+            Element1dResponse.endNodeId
         ) as BeamOsNode;
 
         let el = new BeamOsElement1d(
-            element1DResponse.id,
+            Element1dResponse.id,
             startNode,
             endNode,
             this.config.defaultElement1dMaterial
@@ -91,17 +97,33 @@ export class EditorApi implements IEditorApiAlpha {
         return Promise.resolve(ResultFactory.Success());
     }
 
-    async createModelHydrated(
-        modelResponseHydrated: ModelResponseHydrated
-    ): Promise<Result> {
-        modelResponseHydrated.nodes.forEach(async (node) => {
-            await this.createNode(node);
-        });
-        modelResponseHydrated.element1Ds.forEach(async (element1d) => {
-            await this.createElement1d(element1d);
-        });
-        return ResultFactory.Success();
+    deleteElement1d(body: IModelEntity): Promise<Result> {
+        let el = this.getObjectByBeamOsUniqueId<BeamOsElement1d>(
+            BeamOsElement1d.beamOsObjectType + body.id
+        );
+
+        this.removeObject3D(el);
+        return Promise.resolve(ResultFactory.Success());
     }
+    deleteElement1ds(body: IModelEntity[]): Promise<Result> {
+        body.forEach(async (el) => {
+            await this.deleteElement1d(el);
+        });
+
+        return Promise.resolve(ResultFactory.Success());
+    }
+
+    // async createModelHydrated(
+    //     modelResponseHydrated: ModelResponseHydrated
+    // ): Promise<Result> {
+    //     modelResponseHydrated.nodes.forEach(async (node) => {
+    //         await this.createNode(node);
+    //     });
+    //     modelResponseHydrated.element1Ds.forEach(async (element1d) => {
+    //         await this.createElement1d(element1d);
+    //     });
+    //     return ResultFactory.Success();
+    // }
 
     createNodes(body: NodeResponse[]): Promise<Result> {
         body.forEach(async (el) => {
@@ -117,9 +139,9 @@ export class EditorApi implements IEditorApiAlpha {
         ) as BeamOsNode;
 
         if (node != null) {
-            node.xCoordinate = nodeResponse.locationPoint.xCoordinate;
-            node.yCoordinate = nodeResponse.locationPoint.yCoordinate;
-            node.zCoordinate = nodeResponse.locationPoint.zCoordinate;
+            node.xCoordinate = nodeResponse.locationPoint.x;
+            node.yCoordinate = nodeResponse.locationPoint.y;
+            node.zCoordinate = nodeResponse.locationPoint.z;
             node.setMeshPositionFromCoordinates();
             node.firePositionChangedEvent();
 
@@ -127,15 +149,31 @@ export class EditorApi implements IEditorApiAlpha {
         } else {
             node = new BeamOsNode(
                 nodeResponse.id,
-                nodeResponse.locationPoint.xCoordinate,
-                nodeResponse.locationPoint.yCoordinate,
-                nodeResponse.locationPoint.zCoordinate,
+                nodeResponse.locationPoint.x,
+                nodeResponse.locationPoint.y,
+                nodeResponse.locationPoint.z,
                 nodeResponse.restraint,
                 this.config.yAxisUp
             );
 
             this.addObject(node);
         }
+        return Promise.resolve(ResultFactory.Success());
+    }
+
+    deleteNode(body: IModelEntity): Promise<Result> {
+        let el = this.getObjectByBeamOsUniqueId<BeamOsNode>(
+            BeamOsNode.beamOsObjectType + body.id
+        );
+
+        this.removeObject3D(el);
+        return Promise.resolve(ResultFactory.Success());
+    }
+    deleteNodes(body: IModelEntity[]): Promise<Result> {
+        body.forEach(async (el) => {
+            await this.deleteNode(el);
+        });
+
         return Promise.resolve(ResultFactory.Success());
     }
 
@@ -148,10 +186,28 @@ export class EditorApi implements IEditorApiAlpha {
     }
 
     createPointLoad(body: PointLoadResponse): Promise<Result> {
-        const node = this.getObjectByBeamOsId<BeamOsNode>(body.nodeId);
+        const node = this.getObjectByBeamOsUniqueId<BeamOsNode>(
+            BeamOsNode.beamOsObjectType + body.nodeId
+        );
         const pointLoad = new BeamOsPointLoad(body.id, node, body.direction);
 
         this.addObject(pointLoad);
+        return Promise.resolve(ResultFactory.Success());
+    }
+
+    deletePointLoad(body: IModelEntity): Promise<Result> {
+        let el = this.getObjectByBeamOsUniqueId<BeamOsPointLoad>(
+            BeamOsPointLoad.beamOsObjectType + body.id
+        );
+
+        this.removeObject3D(el);
+        return Promise.resolve(ResultFactory.Success());
+    }
+    deletePointLoads(body: IModelEntity[]): Promise<Result> {
+        body.forEach(async (el) => {
+            await this.deletePointLoad(el);
+        });
+
         return Promise.resolve(ResultFactory.Success());
     }
 
@@ -165,9 +221,11 @@ export class EditorApi implements IEditorApiAlpha {
     }
 
     createShearDiagram(body: ShearDiagramResponse): Promise<Result> {
-        const el = this.getObjectByBeamOsId<BeamOsElement1d>(body.element1DId);
+        const el = this.getObjectByBeamOsUniqueId<BeamOsElement1d>(
+            BeamOsElement1d.beamOsObjectType + body.element1dId
+        );
         const shearDiagramResponse = new BeamOsDiagram(
-            body.id,
+            body.element1dId,
             body.intervals,
             el,
             this.config.yAxisUp,
@@ -188,9 +246,11 @@ export class EditorApi implements IEditorApiAlpha {
     }
 
     createMomentDiagram(body: MomentDiagramResponse): Promise<Result> {
-        const el = this.getObjectByBeamOsId<BeamOsElement1d>(body.element1DId);
+        const el = this.getObjectByBeamOsUniqueId<BeamOsElement1d>(
+            BeamOsElement1d.beamOsObjectType + body.element1dId
+        );
         const shearDiagramResponse = new BeamOsDiagram(
-            body.id,
+            body.element1dId,
             body.intervals,
             el,
             this.config.yAxisUp,
@@ -201,52 +261,89 @@ export class EditorApi implements IEditorApiAlpha {
         return Promise.resolve(ResultFactory.Success());
     }
 
-    setColorFilter(body: SetColorFilter): Promise<Result> {
-        let ids: string[];
-        if (!body.colorAllOthers) {
-            ids = body.beamOsIds;
-        } else {
-            ids = [];
-            this.currentModel.children.forEach((obj) => {
-                const beamOsId = (<IBeamOsMesh>(<any>obj)).beamOsId;
-                if (!body.beamOsIds.includes(beamOsId)) {
-                    ids.push(beamOsId);
-                }
-            });
-        }
-        ids.forEach((id) => {
-            const el = this.getObjectByBeamOsId<IBeamOsMesh>(id);
-            el.SetColorFilter(parseInt(body.colorHex), body.ghost);
+    createDeflectionDiagram(body: DeflectionDiagramResponse): Promise<Result> {
+        const el = this.getObjectByBeamOsUniqueId<BeamOsElement1d>(
+            BeamOsElement1d.beamOsObjectType + body.element1dId
+        );
+        const diagramResponse = new BeamOsDiagramByPoints(
+            body.element1dId,
+            el.startNode,
+            el.endNode,
+            body
+        );
+
+        this.currentOverlay.add(diagramResponse);
+        return Promise.resolve(ResultFactory.Success());
+    }
+    createDeflectionDiagrams(
+        body: DeflectionDiagramResponse[]
+    ): Promise<Result> {
+        this.currentOverlay.clear();
+        body.forEach(async (diagram) => {
+            await this.createDeflectionDiagram(diagram);
         });
 
         return Promise.resolve(ResultFactory.Success());
     }
 
-    clearFilters(body: ClearFilters): Promise<Result> {
-        let ids: string[];
-        if (!body.colorAllOthers) {
-            ids = body.beamOsIds;
-        } else {
-            ids = [];
-            this.currentModel.children.forEach((obj) => {
-                const beamOsId = (<IBeamOsMesh>(<any>obj)).beamOsId;
-                if (!body.beamOsIds.includes(beamOsId)) {
-                    ids.push(beamOsId);
-                }
-            });
-        }
-        ids.forEach((id) => {
-            const el = this.getObjectByBeamOsId<IBeamOsMesh>(id);
-            el.RemoveColorFilter();
-        });
+    // setColorFilter(body: SetColorFilter): Promise<Result> {
+    //     let ids: string[];
+    //     if (!body.colorAllOthers) {
+    //         ids = body.beamOsIds;
+    //     } else {
+    //         ids = [];
+    //         this.currentModel.children.forEach((obj) => {
+    //             const beamOsId = (<IBeamOsMesh>(<any>obj)).beamOsId;
+    //             if (!body.beamOsIds.includes(beamOsId)) {
+    //                 ids.push(beamOsId);
+    //             }
+    //         });
+    //     }
+    //     ids.forEach((id) => {
+    //         const el = this.getObjectByBeamOsId<IBeamOsMesh>(id);
+    //         el.SetColorFilter(parseInt(body.colorHex), body.ghost);
+    //     });
 
-        return Promise.resolve(ResultFactory.Success());
-    }
+    //     return Promise.resolve(ResultFactory.Success());
+    // }
 
-    setModelResults(body: AnalyticalResultsResponse): Promise<Result> {
-        if (!body) {
-            return Promise.resolve(ResultFactory.Success());
-        }
+    // clearFilters(body: ClearFilters): Promise<Result> {
+    //     let ids: string[];
+    //     if (!body.colorAllOthers) {
+    //         ids = body.beamOsIds;
+    //     } else {
+    //         ids = [];
+    //         this.currentModel.children.forEach((obj) => {
+    //             const beamOsId = (<IBeamOsMesh>(<any>obj)).beamOsId;
+    //             if (!body.beamOsIds.includes(beamOsId)) {
+    //                 ids.push(beamOsId);
+    //             }
+    //         });
+    //     }
+    //     ids.forEach((id) => {
+    //         const el = this.getObjectByBeamOsId<IBeamOsMesh>(id);
+    //         el.RemoveColorFilter();
+    //     });
+
+    //     return Promise.resolve(ResultFactory.Success());
+    // }
+
+    // setModelResults(body: AnalyticalResultsResponse): Promise<Result> {
+    //     if (!body) {
+    //         return Promise.resolve(ResultFactory.Success());
+    //     }
+    //     this.config.maxShearMagnitude = Math.max(
+    //         body.maxShear.value,
+    //         Math.abs(body.minShear.value)
+    //     );
+    //     this.config.maxMomentMagnitude = Math.max(
+    //         body.maxMoment.value,
+    //         Math.abs(body.minMoment.value)
+    //     );
+    //     return Promise.resolve(ResultFactory.Success());
+    // }
+
+    setGlobalStresses(body: GlobalStresses): Promise<Result> {
         this.config.maxShearMagnitude = Math.max(
             body.maxShear.value,
             Math.abs(body.minShear.value)
@@ -282,10 +379,10 @@ export class EditorApi implements IEditorApiAlpha {
     }
 
     reduceMoveNodeCommand(body: MoveNodeCommand): Promise<Result> {
-        let node = this.sceneRoot.getObjectByProperty(
-            "beamOsId",
-            body.nodeId
-        ) as BeamOsNode;
+        let node = this.getObjectByBeamOsUniqueId<BeamOsNode>(
+            BeamOsNode.beamOsObjectType + body.nodeId
+        );
+
         node.position.x = body.newLocation.x;
         node.position.y = body.newLocation.y;
         node.position.z = body.newLocation.z;
@@ -298,19 +395,38 @@ export class EditorApi implements IEditorApiAlpha {
         this.currentModel.add(mesh);
     }
 
-    getObjectByBeamOsId<TObject>(beamOsId: string): TObject {
+    getObjectByBeamOsUniqueId<TObject>(beamOsUniqueId: string): TObject {
         return (
             (this.currentModel.getObjectByProperty(
-                "beamOsId",
-                beamOsId
+                "beamOsUniqueId",
+                beamOsUniqueId
             ) as TObject) ??
             this.throwExpression(
-                "Could not find object with beamOsId " + beamOsId
+                "Could not find object with beamOsId " + beamOsUniqueId
             )
         );
     }
 
     throwExpression(errorMessage: string): never {
         throw new Error(errorMessage);
+    }
+
+    removeObject3D(object3D: THREE.Mesh) {
+        // if (!(object3D instanceof THREE.Mesh)) return false;
+
+        // for better memory management and performance
+        if (object3D.geometry) object3D.geometry.dispose();
+
+        if (object3D.material) {
+            if (object3D.material instanceof Array) {
+                // for better memory management and performance
+                object3D.material.forEach((material) => material.dispose());
+            } else {
+                // for better memory management and performance
+                object3D.material.dispose();
+            }
+        }
+        object3D.removeFromParent(); // the parent might be the scene or another Object3D, but it is sure to be removed this way
+        return true;
     }
 }

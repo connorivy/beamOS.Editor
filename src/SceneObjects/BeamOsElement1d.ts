@@ -10,18 +10,21 @@ export interface NodeEventMap extends THREE.Object3DEventMap {
 
 export class BeamOsElement1d extends Line2 implements IBeamOsMesh {
     public static lineThickness: number = 0.1;
+    public static beamOsObjectType: string = "Element1d";
     public beamOsObjectType: string = "Element1d";
     private onNodeMovedFunc: (_event: any) => void;
     private previousMaterial: LineMaterial | undefined;
+    public beamOsUniqueId: string;
 
     constructor(
-        public beamOsId: string,
+        public beamOsId: number,
         public startNode: BeamOsNode,
         public endNode: BeamOsNode,
         lineMaterial: LineMaterial
     ) {
         super(new LineGeometry(), lineMaterial);
 
+        this.beamOsUniqueId = BeamOsElement1d.beamOsObjectType + beamOsId;
         this.onNodeMovedFunc = this.onNodeMoved.bind(this);
 
         this.setPositions();

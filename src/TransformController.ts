@@ -51,7 +51,8 @@ export class TransformController {
                         y: event.target.object.position.y,
                         z: event.target.object.position.z,
                     }),
-                    source: 2,
+                    handledByBlazor: false,
+                    handledByEditor: true,
                 })
             );
 

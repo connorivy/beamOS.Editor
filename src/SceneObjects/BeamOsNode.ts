@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { BeamOsMesh } from "../BeamOsMesh";
-import { RestraintContract } from "../EditorApi/EditorApiAlpha";
+import { Restraint } from "../EditorApi/EditorApiAlpha";
 import {
     RestraintContractUtils,
     RestraintType,
@@ -15,21 +15,23 @@ export class BeamOsNode extends BeamOsMesh<
     THREE.Material,
     NodeEventMap
 > {
-    public beamOsObjectType: string = "Node";
+    public static beamOsObjectType: string = "Node";
+    // public beamOsObjectType: string = BeamOsNode.beamOsObjectType;
     private static nodeHex: number = 0x00ff00;
     public static nodeRadius: number = 0.1;
 
     constructor(
-        public beamOsId: string,
+        beamOsid: number,
         public xCoordinate: number,
         public yCoordinate: number,
         public zCoordinate: number,
-        public restraint: RestraintContract,
+        public restraint: Restraint,
         yAxisUp: boolean
     ) {
         let restraintType = RestraintContractUtils.GetRestraintType(restraint);
         super(
-            beamOsId,
+            beamOsid,
+            BeamOsNode.beamOsObjectType,
             BeamOsNode.GetGeometry(restraintType),
             new THREE.MeshLambertMaterial({ color: BeamOsNode.nodeHex })
         );

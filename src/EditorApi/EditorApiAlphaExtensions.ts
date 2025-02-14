@@ -1,10 +1,12 @@
-import { BeamOsError, RestraintContract, Result } from "./EditorApiAlpha";
+import { BeamOsError, ErrorType, Restraint, Result } from "./EditorApiAlpha";
 
 export class BeamOsErrorFactory {
     static None(): BeamOsError {
         return new BeamOsError({
             code: "",
             description: "",
+            type: ErrorType._0,
+            numericType: 0,
         });
     }
 }
@@ -12,21 +14,21 @@ export class BeamOsErrorFactory {
 export class ResultFactory {
     static Success(): Result {
         return new Result({
-            isSuccess: true,
+            isError: false,
             error: BeamOsErrorFactory.None(),
         });
     }
 
     static Failure(error: BeamOsError): Result {
         return new Result({
-            isSuccess: false,
+            isError: true,
             error: error,
         });
     }
 }
 
 export class RestraintContractUtils {
-    static GetRestraintType(restraint: RestraintContract): RestraintType {
+    static GetRestraintType(restraint: Restraint): RestraintType {
         if (
             !restraint.canTranslateAlongX &&
             !restraint.canTranslateAlongY &&

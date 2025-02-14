@@ -12,11 +12,12 @@ export class BeamOsDiagram extends BeamOsMesh<
     THREE.Material,
     DiagramEventMap
 > {
-    public beamOsObjectType: string = "Diagram";
+    public static beamOsObjectType: string = "Diagram";
+    public beamOsUniqueId: string;
     // private static DiagramHex: number = 0xff00ff;
 
     constructor(
-        public beamOsId: string,
+        public beamOsId: number,
         intervals: DiagramConsistentIntervalResponse[],
         element1d: BeamOsElement1d,
         yAxisUp: boolean,
@@ -24,6 +25,7 @@ export class BeamOsDiagram extends BeamOsMesh<
     ) {
         super(
             beamOsId,
+            BeamOsDiagram.beamOsObjectType,
             BeamOsDiagram.GetGeometry(intervals, element1d, maxValue),
             new THREE.MeshStandardMaterial({
                 // color: BeamOsDiagram.DiagramHex,
@@ -32,6 +34,8 @@ export class BeamOsDiagram extends BeamOsMesh<
                 // wireframe: true,
             })
         );
+
+        this.beamOsUniqueId = BeamOsElement1d.beamOsObjectType + beamOsId;
 
         this.position.set(
             element1d.startNode.position.x,
