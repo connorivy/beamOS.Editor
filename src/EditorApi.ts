@@ -11,13 +11,14 @@ import {
     // MomentDiagramResponse,
     MoveNodeCommand,
     NodeResponse,
-    PhysicalModelSettings,
+    ModelSettings,
     PointLoadResponse,
     Result,
     DeflectionDiagramResponse,
     MomentDiagramResponse,
     ShearDiagramResponse,
     GlobalStresses,
+    PutNodeClientCommand,
     // SetColorFilter,
     // ShearDiagramResponse,
 } from "./EditorApi/EditorApiAlpha";
@@ -43,6 +44,9 @@ export class EditorApi implements IEditorApiAlpha {
         this.currentOverlay = new THREE.Group();
         this.sceneRoot.add(this.currentModel);
         this.sceneRoot.add(this.currentOverlay);
+    }
+    reducePutNodeClientCommand(_body: PutNodeClientCommand): Promise<Result> {
+        throw new Error("Method not implemented.");
     }
     clearCurrentOverlay(): Promise<Result> {
         this.currentOverlay.clear();
@@ -97,6 +101,35 @@ export class EditorApi implements IEditorApiAlpha {
         return Promise.resolve(ResultFactory.Success());
     }
 
+    updateElement1d(body: Element1dResponse): Promise<Result> {
+        let existing = this.getObjectByBeamOsUniqueId<BeamOsElement1d>(
+            BeamOsElement1d.beamOsObjectType + body.id
+        );
+
+        if (existing.startNode.beamOsId != body.startNodeId) {
+            let startNode = this.getObjectByBeamOsUniqueId<BeamOsNode>(
+                BeamOsNode.beamOsObjectType + body.startNodeId
+            );
+            existing.ReplaceStartNode(startNode);
+        }
+        if (existing.endNode.beamOsId != body.endNodeId) {
+
+            let endNode = this.getObjectByBeamOsUniqueId<BeamOsNode>(
+                BeamOsNode.beamOsObjectType + body.endNodeId
+            );
+            existing.ReplaceEndNode(endNode);
+        }
+        return Promise.resolve(ResultFactory.Success());
+    }
+
+    updateElement1ds(body: Element1dResponse[]): Promise<Result> {
+        body.forEach(async (el) => {
+            await this.updateElement1d(el);
+        });
+
+        return Promise.resolve(ResultFactory.Success());
+    }
+
     deleteElement1d(body: IModelEntity): Promise<Result> {
         let el = this.getObjectByBeamOsUniqueId<BeamOsElement1d>(
             BeamOsElement1d.beamOsObjectType + body.id
@@ -133,10 +166,9 @@ export class EditorApi implements IEditorApiAlpha {
         return Promise.resolve(ResultFactory.Success());
     }
     createNode(nodeResponse: NodeResponse): Promise<Result> {
-        let node = this.sceneRoot.getObjectByProperty(
-            "beamOsId",
-            nodeResponse.id
-        ) as BeamOsNode;
+        let node = this.tryGetObjectByBeamOsUniqueId<BeamOsNode>(
+            BeamOsNode.beamOsObjectType + nodeResponse.id
+        );
 
         if (node != null) {
             node.xCoordinate = nodeResponse.locationPoint.x;
@@ -158,6 +190,31 @@ export class EditorApi implements IEditorApiAlpha {
 
             this.addObject(node);
         }
+        return Promise.resolve(ResultFactory.Success());
+    }
+
+    updateNode(body: NodeResponse): Promise<Result> {
+        const nodeId = BeamOsNode.beamOsObjectType + body.id;
+        let node = this.getObjectByBeamOsUniqueId<BeamOsNode>(nodeId);
+
+        // Update existing node - position
+        node.xCoordinate = body.locationPoint.x;
+        node.yCoordinate = body.locationPoint.y;
+        node.zCoordinate = body.locationPoint.z;
+        node.setMeshPositionFromCoordinates();
+        node.firePositionChangedEvent();
+
+        // Update restraint - this will trigger geometry update
+        node.restraint = body.restraint;
+
+        return Promise.resolve(ResultFactory.Success());
+    }
+
+    updateNodes(body: NodeResponse[]): Promise<Result> {
+        body.forEach(async (el) => {
+            await this.updateNode(el);
+        });
+
         return Promise.resolve(ResultFactory.Success());
     }
 
@@ -355,7 +412,7 @@ export class EditorApi implements IEditorApiAlpha {
         return Promise.resolve(ResultFactory.Success());
     }
 
-    setSettings(body: PhysicalModelSettings): Promise<Result> {
+    setSettings(body: ModelSettings): Promise<Result> {
         if (body.yAxisUp == this.config.yAxisUp) {
             return Promise.resolve(ResultFactory.Success());
         }
@@ -407,6 +464,15 @@ export class EditorApi implements IEditorApiAlpha {
         );
     }
 
+    tryGetObjectByBeamOsUniqueId<TObject>(
+        beamOsUniqueId: string
+    ): TObject | null {
+        return this.currentModel.getObjectByProperty(
+            "beamOsUniqueId",
+            beamOsUniqueId
+        ) as TObject;
+    }
+
     throwExpression(errorMessage: string): never {
         throw new Error(errorMessage);
     }
@@ -427,6 +493,7 @@ export class EditorApi implements IEditorApiAlpha {
             }
         }
         object3D.removeFromParent(); // the parent might be the scene or another Object3D, but it is sure to be removed this way
+        object3D.geometry.attributes.position.needsUpdate = true;
         return true;
     }
 }

@@ -30,25 +30,13 @@ export class BeamOsEditor {
         private editorConfigurations: EditorConfigurations
     ) {
         this.scene = new THREE.Scene();
-        this.scene.add(new THREE.AmbientLight(0xaaaaaa));
+        this.scene.add(new THREE.AmbientLight(0xaaaaaa, 10));
 
         // z-up scene by default
         this.sceneRoot = new THREE.Group();
         this.sceneRoot.rotateX(-Math.PI / 2);
         this.sceneRoot.up = new THREE.Vector3(0, 0, 1);
         this.scene.add(this.sceneRoot);
-
-        const light = new THREE.SpotLight(0xffffff, 10000);
-        light.position.set(0, 25, 50);
-        light.angle = Math.PI / 5;
-
-        light.castShadow = true;
-        light.shadow.camera.near = 10;
-        light.shadow.camera.far = 100;
-        light.shadow.mapSize.width = 1024;
-        light.shadow.mapSize.height = 1024;
-
-        this.scene.add(light);
 
         this.camera = new THREE.PerspectiveCamera(
             50,

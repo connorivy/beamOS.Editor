@@ -62,9 +62,21 @@ export class BeamOsElement1d extends Line2 implements IBeamOsMesh {
         this.previousMaterial = undefined;
     }
 
+    public ReplaceStartNode(newNode: BeamOsNode) {
+        this.startNode.removeEventListener("moved", this.onNodeMovedFunc);
+        this.startNode = newNode;
+        this.startNode.addEventListener("moved", this.onNodeMovedFunc);
+        this.setPositions();
+    }
+    public ReplaceEndNode(newNode: BeamOsNode) {
+        this.endNode.removeEventListener("moved", this.onNodeMovedFunc);
+        this.endNode = newNode;
+        this.endNode.addEventListener("moved", this.onNodeMovedFunc);
+        this.setPositions();
+    }
+
     onNodeMoved(_event: any) {
         this.setPositions();
-        this.geometry.attributes.position.needsUpdate = true;
     }
 
     setPositions() {
@@ -76,5 +88,6 @@ export class BeamOsElement1d extends Line2 implements IBeamOsMesh {
             this.endNode.position.y,
             this.endNode.position.z,
         ]);
+        this.geometry.attributes.position.needsUpdate = true;
     }
 }

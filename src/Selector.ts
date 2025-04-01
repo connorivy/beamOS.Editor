@@ -8,6 +8,7 @@ import {
     SelectedObject,
 } from "./EditorApi/EditorEventsApi";
 import { EditorConfigurations } from "./EditorConfigurations";
+import { Line2 } from "three/examples/jsm/lines/Line2.js";
 
 export class Selector {
     private selectionBox: THREE.Box3Helper;
@@ -69,14 +70,50 @@ export class Selector {
             if (!this.editorConfigurations.isReadOnly) {
                 this.transformController.transformControl.attach(raycastedMesh);
             }
-            this.selectionBox.box.setFromObject(raycastedMesh);
-        } else {
-            if (!this.editorConfigurations.isReadOnly) {
-                this.transformController.transformControl.detach();
+
+            // Use different box setting method based on object type
+            if (raycastedMesh instanceof Line2) {
+                this.setSelectionBoxFromLine(raycastedMesh);
+            } else if (isBeamOsMesh(raycastedMesh)) {
+                this.selectionBox.box.setFromObject(raycastedMesh);
             }
-            this.selectionBox.visible = false;
-            this.selectorInfo.currentSelection = [];
+        } else {
+            this.DeselectAll();
         }
+    }
+
+    private DeselectAll() {
+        if (!this.editorConfigurations.isReadOnly) {
+            this.transformController.transformControl.detach();
+        }
+        this.selectionBox.visible = false;
+        this.selectorInfo.currentSelection = [];
+    }
+
+    setSelectionBoxFromLine(line: Line2, padding: number = 0.1) {
+        const box = this.selectionBox.box;
+
+        // Make sure the line's geometry has computed its bounding box
+        if (!line.geometry.boundingBox) {
+            line.geometry.computeBoundingBox();
+        }
+
+        if (line.geometry.boundingBox === null) {
+            throw new Error("Line2 geometry has no bounding box");
+        }
+
+        // Copy the geometry's bounding box
+        box.copy(line.geometry.boundingBox);
+
+        // Transform the box to world space using the line's world matrix
+        box.applyMatrix4(line.matrixWorld);
+
+        // Add padding
+        box.min.subScalar(padding);
+        box.max.addScalar(padding);
+
+        // Store a flag to indicate this object has a custom box
+        line.userData.hasCustomBox = true;
     }
 
     handleClick() {
@@ -88,12 +125,14 @@ export class Selector {
     }
 
     animate() {
-        // selection box should reflect current animation state
+        //selection box should reflect current animation state
         if (this.selectorInfo.currentSelection.length > 0) {
-            this.selectionBox.box.setFromObject(
-                (<any>this.selectorInfo.currentSelection[0]) as THREE.Object3D,
-                true
-            );
+            let selectedMesh = this.selectorInfo.currentSelection[0];
+            if (selectedMesh instanceof Line2) {
+                this.setSelectionBoxFromLine(selectedMesh);
+            } else if (selectedMesh instanceof THREE.Object3D) {
+                this.selectionBox.box.setFromObject(selectedMesh);
+            }
         }
     }
 }

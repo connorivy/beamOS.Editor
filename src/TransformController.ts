@@ -53,6 +53,7 @@ export class TransformController {
                     }),
                     handledByBlazor: false,
                     handledByEditor: true,
+                    handledByServer: false
                 })
             );
 

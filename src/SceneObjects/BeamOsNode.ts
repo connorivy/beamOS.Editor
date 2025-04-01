@@ -20,12 +20,14 @@ export class BeamOsNode extends BeamOsMesh<
     private static nodeHex: number = 0x00ff00;
     public static nodeRadius: number = 0.1;
 
+    private _restraint: Restraint;
+
     constructor(
         beamOsid: number,
         public xCoordinate: number,
         public yCoordinate: number,
         public zCoordinate: number,
-        public restraint: Restraint,
+        restraint: Restraint,
         yAxisUp: boolean
     ) {
         let restraintType = RestraintContractUtils.GetRestraintType(restraint);
@@ -35,6 +37,7 @@ export class BeamOsNode extends BeamOsMesh<
             BeamOsNode.GetGeometry(restraintType),
             new THREE.MeshLambertMaterial({ color: BeamOsNode.nodeHex })
         );
+        this._restraint = restraint;
         this.setMeshPositionFromCoordinates();
 
         // GetGeometry is assuming a yAxis is up (three js conventions).
@@ -44,8 +47,18 @@ export class BeamOsNode extends BeamOsMesh<
         }
     }
 
+    set restraint(value) {
+        this._restraint = value;
+        this.updateGeometryFromRestraint();
+    }
+
+    get restraint() {
+        return this._restraint;
+    }
+
     public setMeshPositionFromCoordinates() {
         this.position.set(this.xCoordinate, this.yCoordinate, this.zCoordinate);
+        this.geometry.attributes.position.needsUpdate = true;
     }
 
     public firePositionChangedEvent() {
@@ -65,5 +78,21 @@ export class BeamOsNode extends BeamOsMesh<
         } else {
             return new THREE.SphereGeometry(BeamOsNode.nodeRadius);
         }
+    }
+
+    // Add this method to your BeamOsNode class
+    updateGeometryFromRestraint() {
+        // Dispose of the old geometry to prevent memory leaks
+        if (this.geometry) {
+            this.geometry.dispose();
+        }
+
+        let restraintType = RestraintContractUtils.GetRestraintType(
+            this.restraint
+        );
+        this.geometry = BeamOsNode.GetGeometry(restraintType);
+
+        // Update the mesh
+        this.geometry.attributes.position.needsUpdate = true;
     }
 }

@@ -19,6 +19,11 @@ export interface IEditorEventsApi {
      * @return OK
      */
     dispatchMoveNodeCommand(body: MoveNodeCommand): Promise<void>;
+
+    /**
+     * @return OK
+     */
+    dispatchPutNodeClientCommand(body: PutNodeClientCommand): Promise<void>;
 }
 
 export class EditorEventsApi implements IEditorEventsApi {
@@ -91,6 +96,43 @@ export class EditorEventsApi implements IEditorEventsApi {
     }
 
     protected processDispatchMoveNodeCommand(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    dispatchPutNodeClientCommand(body: PutNodeClientCommand): Promise<void> {
+        let url_ = this.baseUrl + "/EditorEventsApi/DispatchPutNodeClientCommand";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDispatchPutNodeClientCommand(_response);
+        });
+    }
+
+    protected processDispatchPutNodeClientCommand(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -201,6 +243,15 @@ export interface ICoordinate3D {
     z: number;
 }
 
+export enum LengthUnit {
+    _0 = 0,
+    _1 = 1,
+    _2 = 2,
+    _3 = 3,
+    _4 = 4,
+    _5 = 5,
+}
+
 export class MoveNodeCommand implements IMoveNodeCommand {
     canvasId!: string;
     nodeId!: number;
@@ -208,6 +259,7 @@ export class MoveNodeCommand implements IMoveNodeCommand {
     newLocation!: Coordinate3D;
     handledByEditor!: boolean;
     handledByBlazor!: boolean;
+    handledByServer!: boolean;
 
     constructor(data?: IMoveNodeCommand) {
         if (data) {
@@ -230,6 +282,7 @@ export class MoveNodeCommand implements IMoveNodeCommand {
             this.newLocation = _data["newLocation"] ? Coordinate3D.fromJS(_data["newLocation"]) : new Coordinate3D();
             this.handledByEditor = _data["handledByEditor"];
             this.handledByBlazor = _data["handledByBlazor"];
+            this.handledByServer = _data["handledByServer"];
         }
     }
 
@@ -248,6 +301,7 @@ export class MoveNodeCommand implements IMoveNodeCommand {
         data["newLocation"] = this.newLocation ? this.newLocation.toJSON() : <any>undefined;
         data["handledByEditor"] = this.handledByEditor;
         data["handledByBlazor"] = this.handledByBlazor;
+        data["handledByServer"] = this.handledByServer;
         return data;
     }
 }
@@ -259,6 +313,223 @@ export interface IMoveNodeCommand {
     newLocation: Coordinate3D;
     handledByEditor: boolean;
     handledByBlazor: boolean;
+    handledByServer: boolean;
+}
+
+export class NodeResponse implements INodeResponse {
+    id!: number;
+    modelId!: string;
+    locationPoint!: Point;
+    restraint!: Restraint;
+
+    constructor(data?: INodeResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        if (!data) {
+            this.locationPoint = new Point();
+            this.restraint = new Restraint();
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.modelId = _data["modelId"];
+            this.locationPoint = _data["locationPoint"] ? Point.fromJS(_data["locationPoint"]) : new Point();
+            this.restraint = _data["restraint"] ? Restraint.fromJS(_data["restraint"]) : new Restraint();
+        }
+    }
+
+    static fromJS(data: any): NodeResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new NodeResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["modelId"] = this.modelId;
+        data["locationPoint"] = this.locationPoint ? this.locationPoint.toJSON() : <any>undefined;
+        data["restraint"] = this.restraint ? this.restraint.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface INodeResponse {
+    id: number;
+    modelId: string;
+    locationPoint: Point;
+    restraint: Restraint;
+}
+
+export class Point implements IPoint {
+    x!: number;
+    y!: number;
+    z!: number;
+    lengthUnit!: LengthUnit;
+
+    constructor(data?: IPoint) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.x = _data["x"];
+            this.y = _data["y"];
+            this.z = _data["z"];
+            this.lengthUnit = _data["lengthUnit"];
+        }
+    }
+
+    static fromJS(data: any): Point {
+        data = typeof data === 'object' ? data : {};
+        let result = new Point();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["x"] = this.x;
+        data["y"] = this.y;
+        data["z"] = this.z;
+        data["lengthUnit"] = this.lengthUnit;
+        return data;
+    }
+}
+
+export interface IPoint {
+    x: number;
+    y: number;
+    z: number;
+    lengthUnit: LengthUnit;
+}
+
+export class PutNodeClientCommand implements IPutNodeClientCommand {
+    previous!: NodeResponse;
+    new!: NodeResponse;
+    readonly id!: string;
+    handledByEditor!: boolean;
+    handledByBlazor!: boolean;
+    handledByServer!: boolean;
+
+    constructor(data?: IPutNodeClientCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        if (!data) {
+            this.previous = new NodeResponse();
+            this.new = new NodeResponse();
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.previous = _data["previous"] ? NodeResponse.fromJS(_data["previous"]) : new NodeResponse();
+            this.new = _data["new"] ? NodeResponse.fromJS(_data["new"]) : new NodeResponse();
+            (<any>this).id = _data["id"];
+            this.handledByEditor = _data["handledByEditor"];
+            this.handledByBlazor = _data["handledByBlazor"];
+            this.handledByServer = _data["handledByServer"];
+        }
+    }
+
+    static fromJS(data: any): PutNodeClientCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new PutNodeClientCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["previous"] = this.previous ? this.previous.toJSON() : <any>undefined;
+        data["new"] = this.new ? this.new.toJSON() : <any>undefined;
+        data["id"] = this.id;
+        data["handledByEditor"] = this.handledByEditor;
+        data["handledByBlazor"] = this.handledByBlazor;
+        data["handledByServer"] = this.handledByServer;
+        return data;
+    }
+}
+
+export interface IPutNodeClientCommand {
+    previous: NodeResponse;
+    new: NodeResponse;
+    id: string;
+    handledByEditor: boolean;
+    handledByBlazor: boolean;
+    handledByServer: boolean;
+}
+
+export class Restraint implements IRestraint {
+    canTranslateAlongX!: boolean;
+    canTranslateAlongY!: boolean;
+    canTranslateAlongZ!: boolean;
+    canRotateAboutX!: boolean;
+    canRotateAboutY!: boolean;
+    canRotateAboutZ!: boolean;
+
+    constructor(data?: IRestraint) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.canTranslateAlongX = _data["canTranslateAlongX"];
+            this.canTranslateAlongY = _data["canTranslateAlongY"];
+            this.canTranslateAlongZ = _data["canTranslateAlongZ"];
+            this.canRotateAboutX = _data["canRotateAboutX"];
+            this.canRotateAboutY = _data["canRotateAboutY"];
+            this.canRotateAboutZ = _data["canRotateAboutZ"];
+        }
+    }
+
+    static fromJS(data: any): Restraint {
+        data = typeof data === 'object' ? data : {};
+        let result = new Restraint();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["canTranslateAlongX"] = this.canTranslateAlongX;
+        data["canTranslateAlongY"] = this.canTranslateAlongY;
+        data["canTranslateAlongZ"] = this.canTranslateAlongZ;
+        data["canRotateAboutX"] = this.canRotateAboutX;
+        data["canRotateAboutY"] = this.canRotateAboutY;
+        data["canRotateAboutZ"] = this.canRotateAboutZ;
+        return data;
+    }
+}
+
+export interface IRestraint {
+    canTranslateAlongX: boolean;
+    canTranslateAlongY: boolean;
+    canTranslateAlongZ: boolean;
+    canRotateAboutX: boolean;
+    canRotateAboutY: boolean;
+    canRotateAboutZ: boolean;
 }
 
 export class SelectedObject implements ISelectedObject {
