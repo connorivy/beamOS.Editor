@@ -19,13 +19,14 @@ import {
     ShearDiagramResponse,
     GlobalStresses,
     PutNodeClientCommand,
+    ModelProposalResponse,
     // SetColorFilter,
     // ShearDiagramResponse,
 } from "./EditorApi/EditorApiAlpha";
 import { EditorConfigurations } from "./EditorConfigurations";
 import { ResultFactory } from "./EditorApi/EditorApiAlphaExtensions";
-import { BeamOsNode } from "./SceneObjects/BeamOsNode";
-import { BeamOsElement1d } from "./SceneObjects/BeamOsElement1d";
+import { BeamOsNode, BeamOsNodeProposal } from "./SceneObjects/BeamOsNode";
+import { BeamOsElement1d, BeamOsElement1dProposal } from "./SceneObjects/BeamOsElement1d";
 import { BeamOsPointLoad } from "./SceneObjects/BeamOsPointLoad";
 import { BeamOsDiagram } from "./SceneObjects/BeamOsDiagram";
 import { BeamOsDiagramByPoints } from "./SceneObjects/BeamOsDiagramByPoints";
@@ -35,15 +36,125 @@ import { BeamOsDiagramByPoints } from "./SceneObjects/BeamOsDiagramByPoints";
 export class EditorApi implements IEditorApiAlpha {
     private currentModel: THREE.Group;
     private currentOverlay: THREE.Group;
+    private currentProposal: THREE.Group;
 
     constructor(
         private sceneRoot: THREE.Group,
         private config: EditorConfigurations
     ) {
         this.currentModel = new THREE.Group();
+        this.currentProposal = new THREE.Group();
         this.currentOverlay = new THREE.Group();
         this.sceneRoot.add(this.currentModel);
+        this.sceneRoot.add(this.currentProposal);
         this.sceneRoot.add(this.currentOverlay);
+    }
+
+    updatePointLoad(body: PointLoadResponse): Promise<Result> {
+        throw new Error("Method not implemented.");
+    }
+    updatePointLoads(body: PointLoadResponse[]): Promise<Result> {
+        throw new Error("Method not implemented.");
+    }
+    displayModelProposal(body: ModelProposalResponse): Promise<Result> {
+        console.log("proposal", body);
+        for (const node of body.createNodeProposals ?? []) {
+            var newNode = new BeamOsNodeProposal(
+                undefined,
+                node.id,
+                node.locationPoint.x,
+                node.locationPoint.y,
+                node.locationPoint.z,
+                node.restraint,
+                this.config.yAxisUp
+            );
+            newNode.SetColorFilter(
+                this.config.createNodeProposalHex,
+                false
+            );
+
+            this.addProposalObject(newNode);
+        }
+        for (const node of body.modifyNodeProposals ?? []) {
+            var existingNode = this.getObjectByBeamOsUniqueId<BeamOsNode>(
+                BeamOsNode.beamOsObjectType + node.existingNodeId
+            );
+            existingNode.SetColorFilter(
+                this.config.modifyNodeProposalHexExisting,
+                true
+            );
+
+            var newNode = new BeamOsNodeProposal(
+                existingNode.beamOsId,
+                node.id,
+                node.locationPoint.x,
+                node.locationPoint.y,
+                node.locationPoint.z,
+                node.restraint,
+                this.config.yAxisUp
+            );
+            newNode.SetColorFilter(
+                this.config.modifyNodeProposalHexNew,
+                false
+            );
+            this.addProposalObject(newNode);
+        }
+
+        for (const el of body.createElement1dProposals ?? []) {
+            let startNode: BeamOsNode;
+            if (el.startNodeId.existingId != undefined) {
+                startNode = this.getObjectByBeamOsUniqueId<BeamOsNode>(
+                    BeamOsNode.beamOsObjectType + el.startNodeId.existingId
+                );
+            }
+            else if (el.startNodeId.proposedId != undefined) {
+                startNode = this.getProposalObjectByBeamOsUniqueId<BeamOsNode>(
+                    BeamOsNodeProposal.beamOsObjectType + el.startNodeId.proposedId
+                );
+            }
+            else {
+                throw new Error("startNodeId.existingId or startNodeId.proposedId must be defined");
+            }
+
+            let endNode: BeamOsNode;
+            if (el.endNodeId.existingId != undefined) {
+                endNode = this.getObjectByBeamOsUniqueId<BeamOsNode>(
+                    BeamOsNode.beamOsObjectType + el.endNodeId.existingId
+                );
+            }
+            else if (el.endNodeId.proposedId != undefined) {
+                endNode = this.getProposalObjectByBeamOsUniqueId<BeamOsNode>(
+                    BeamOsNodeProposal.beamOsObjectType + el.endNodeId.proposedId
+                );
+            }
+            else {
+                throw new Error("startNodeId.existingId or startNodeId.proposedId must be defined");
+            }
+
+            var newElement1d = new BeamOsElement1dProposal(
+                undefined,
+                el.id,
+                startNode,
+                endNode,
+                this.config.defaultElement1dMaterial
+            );
+            newElement1d.SetColorFilter(
+                this.config.createElement1dProposalHex,
+                false
+            );
+
+            this.addProposalObject(newElement1d);
+        }
+
+        for (const el of body.modifyElement1dProposals ?? []) {
+
+        }
+
+        return Promise.resolve(ResultFactory.Success());
+    }
+    clearModelProposals(): Promise<Result> {
+        this.currentProposal.clear();
+        return Promise.resolve(ResultFactory.Success());
     }
     reducePutNodeClientCommand(_body: PutNodeClientCommand): Promise<Result> {
         throw new Error("Method not implemented.");
@@ -452,9 +563,25 @@ export class EditorApi implements IEditorApiAlpha {
         this.currentModel.add(mesh);
     }
 
+    addProposalObject(mesh: THREE.Mesh) {
+        this.currentProposal.add(mesh);
+    }
+
     getObjectByBeamOsUniqueId<TObject>(beamOsUniqueId: string): TObject {
         return (
             (this.currentModel.getObjectByProperty(
+                "beamOsUniqueId",
+                beamOsUniqueId
+            ) as TObject) ??
+            this.throwExpression(
+                "Could not find object with beamOsId " + beamOsUniqueId
+            )
+        );
+    }
+
+    getProposalObjectByBeamOsUniqueId<TObject>(beamOsUniqueId: string): TObject {
+        return (
+            (this.currentProposal.getObjectByProperty(
                 "beamOsUniqueId",
                 beamOsUniqueId
             ) as TObject) ??

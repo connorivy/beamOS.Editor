@@ -28,12 +28,13 @@ export class BeamOsNode extends BeamOsMesh<
         public yCoordinate: number,
         public zCoordinate: number,
         restraint: Restraint,
-        yAxisUp: boolean
+        yAxisUp: boolean,
+        objectType: string = BeamOsNode.beamOsObjectType
     ) {
         let restraintType = RestraintContractUtils.GetRestraintType(restraint);
         super(
             beamOsid,
-            BeamOsNode.beamOsObjectType,
+            objectType,
             BeamOsNode.GetGeometry(restraintType),
             new THREE.MeshLambertMaterial({ color: BeamOsNode.nodeHex })
         );
@@ -94,5 +95,32 @@ export class BeamOsNode extends BeamOsMesh<
 
         // Update the mesh
         this.geometry.attributes.position.needsUpdate = true;
+    }
+}
+
+export class BeamOsNodeProposal extends BeamOsNode {
+    public static beamOsObjectType: string = "NodeProposal";
+    constructor(
+        public existingNodeId: number | undefined,
+        beamOsid: number,
+        xCoordinate: number,
+        yCoordinate: number,
+        zCoordinate: number,
+        restraint: Restraint,
+        yAxisUp: boolean
+    ) {
+        super(
+            beamOsid,
+            xCoordinate,
+            yCoordinate,
+            zCoordinate,
+            restraint,
+            yAxisUp,
+            BeamOsNode.beamOsObjectType + "Proposal"
+        );
+    }
+
+    public IsExisting() {
+        return this.existingNodeId != undefined;
     }
 }

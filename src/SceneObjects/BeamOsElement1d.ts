@@ -11,7 +11,7 @@ export interface NodeEventMap extends THREE.Object3DEventMap {
 export class BeamOsElement1d extends Line2 implements IBeamOsMesh {
     public static lineThickness: number = 0.1;
     public static beamOsObjectType: string = "Element1d";
-    public beamOsObjectType: string = "Element1d";
+    public beamOsObjectType: string;
     private onNodeMovedFunc: (_event: any) => void;
     private previousMaterial: LineMaterial | undefined;
     public beamOsUniqueId: string;
@@ -20,11 +20,13 @@ export class BeamOsElement1d extends Line2 implements IBeamOsMesh {
         public beamOsId: number,
         public startNode: BeamOsNode,
         public endNode: BeamOsNode,
-        lineMaterial: LineMaterial
+        lineMaterial: LineMaterial,
+        objectType: string = BeamOsElement1d.beamOsObjectType
     ) {
         super(new LineGeometry(), lineMaterial);
 
-        this.beamOsUniqueId = BeamOsElement1d.beamOsObjectType + beamOsId;
+        this.beamOsObjectType = objectType;
+        this.beamOsUniqueId = objectType + beamOsId;
         this.onNodeMovedFunc = this.onNodeMoved.bind(this);
 
         this.setPositions();
@@ -89,5 +91,24 @@ export class BeamOsElement1d extends Line2 implements IBeamOsMesh {
             this.endNode.position.z,
         ]);
         this.geometry.attributes.position.needsUpdate = true;
+    }
+}
+
+export class BeamOsElement1dProposal extends BeamOsElement1d {
+    public static beamOsObjectType: string = "Element1dProposal";
+    constructor(
+        public existingElementId: number | undefined,
+        beamOsId: number,
+        startNode: BeamOsNode,
+        endNode: BeamOsNode,
+        lineMaterial: LineMaterial
+    ) {
+        super(
+            beamOsId,
+            startNode,
+            endNode,
+            lineMaterial,
+            BeamOsElement1dProposal.beamOsObjectType
+        );
     }
 }
