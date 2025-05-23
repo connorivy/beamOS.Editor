@@ -147,7 +147,62 @@ export class EditorApi implements IEditorApiAlpha {
         }
 
         for (const el of body.modifyElement1dProposals ?? []) {
+            // Find the existing element
+            const existingElement = this.getObjectByBeamOsUniqueId<BeamOsElement1d>(
+                BeamOsElement1d.beamOsObjectType + el.existingElement1dId
+            );
 
+            // Find the start and end nodes for the proposal
+            let startNode: BeamOsNode;
+            if (el.startNodeId.existingId != undefined) {
+                startNode = this.getObjectByBeamOsUniqueId<BeamOsNode>(
+                    BeamOsNode.beamOsObjectType + el.startNodeId.existingId
+                );
+            } else if (el.startNodeId.proposedId != undefined) {
+                startNode = this.getProposalObjectByBeamOsUniqueId<BeamOsNode>(
+                    BeamOsNodeProposal.beamOsObjectType + el.startNodeId.proposedId
+                );
+            } else {
+                throw new Error("startNodeId.existingId or startNodeId.proposedId must be defined");
+            }
+
+            let endNode: BeamOsNode;
+            if (el.endNodeId.existingId != undefined) {
+                endNode = this.getObjectByBeamOsUniqueId<BeamOsNode>(
+                    BeamOsNode.beamOsObjectType + el.endNodeId.existingId
+                );
+            } else if (el.endNodeId.proposedId != undefined) {
+                endNode = this.getProposalObjectByBeamOsUniqueId<BeamOsNode>(
+                    BeamOsNodeProposal.beamOsObjectType + el.endNodeId.proposedId
+                );
+            } else {
+                throw new Error("endNodeId.existingId or endNodeId.proposedId must be defined");
+            }
+
+            // Compare properties for diff
+            const startNodeChanged = existingElement.startNode.beamOsId !== startNode.beamOsId;
+            const endNodeChanged = existingElement.endNode.beamOsId !== endNode.beamOsId;
+
+            // Highlight the existing element (ghost it)
+            existingElement.SetColorFilter(this.config.modifyNodeProposalHexExisting, true);
+
+            // Create the proposal element (new state)
+            const newElement1dProposal = new BeamOsElement1dProposal(
+                existingElement.beamOsId,
+                el.id,
+                startNode,
+                endNode,
+                this.config.defaultElement1dMaterial // or el.material if available
+            );
+
+            // Set color filter based on what changed
+            if (startNodeChanged || endNodeChanged) {
+                newElement1dProposal.SetColorFilter(this.config.modifyNodeProposalHexNew, false);
+            } else {
+                newElement1dProposal.SetColorFilter(this.config.createElement1dProposalHex, false);
+            }
+
+            this.addProposalObject(newElement1dProposal);
         }
 
         return Promise.resolve(ResultFactory.Success());
