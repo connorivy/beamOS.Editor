@@ -2029,6 +2029,50 @@ export interface IDeflectionDiagramResponse {
     offsets: number[];
 }
 
+export class DeleteModelEntityProposal implements IDeleteModelEntityProposal {
+    modelEntityId!: number;
+    objectType!: BeamOsObjectType;
+    id!: number;
+
+    constructor(data?: IDeleteModelEntityProposal) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.modelEntityId = _data["modelEntityId"];
+            this.objectType = _data["objectType"];
+            this.id = _data["id"];
+        }
+    }
+
+    static fromJS(data: any): DeleteModelEntityProposal {
+        data = typeof data === 'object' ? data : {};
+        let result = new DeleteModelEntityProposal();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["modelEntityId"] = this.modelEntityId;
+        data["objectType"] = this.objectType;
+        data["id"] = this.id;
+        return data;
+    }
+}
+
+export interface IDeleteModelEntityProposal {
+    modelEntityId: number;
+    objectType: BeamOsObjectType;
+    id: number;
+}
+
 export class DiagramConsistentIntervalResponse implements IDiagramConsistentIntervalResponse {
     startLocation!: Length;
     endLocation!: Length;
@@ -2843,6 +2887,7 @@ export class ModelProposalResponse implements IModelProposalResponse {
     loadCaseProposals?: LoadCase[] | undefined;
     loadCombinationProposals?: LoadCombination[] | undefined;
     proposalIssues?: ProposalIssue[] | undefined;
+    deleteModelEntityProposals?: DeleteModelEntityProposal[] | undefined;
 
     constructor(data?: IModelProposalResponse) {
         if (data) {
@@ -2926,6 +2971,11 @@ export class ModelProposalResponse implements IModelProposalResponse {
                 for (let item of _data["proposalIssues"])
                     this.proposalIssues!.push(ProposalIssue.fromJS(item));
             }
+            if (Array.isArray(_data["deleteModelEntityProposals"])) {
+                this.deleteModelEntityProposals = [] as any;
+                for (let item of _data["deleteModelEntityProposals"])
+                    this.deleteModelEntityProposals!.push(DeleteModelEntityProposal.fromJS(item));
+            }
         }
     }
 
@@ -3006,6 +3056,11 @@ export class ModelProposalResponse implements IModelProposalResponse {
             for (let item of this.proposalIssues)
                 data["proposalIssues"].push(item ? item.toJSON() : <any>undefined);
         }
+        if (Array.isArray(this.deleteModelEntityProposals)) {
+            data["deleteModelEntityProposals"] = [];
+            for (let item of this.deleteModelEntityProposals)
+                data["deleteModelEntityProposals"].push(item ? item.toJSON() : <any>undefined);
+        }
         return data;
     }
 }
@@ -3027,6 +3082,7 @@ export interface IModelProposalResponse {
     loadCaseProposals?: LoadCase[] | undefined;
     loadCombinationProposals?: LoadCombination[] | undefined;
     proposalIssues?: ProposalIssue[] | undefined;
+    deleteModelEntityProposals?: DeleteModelEntityProposal[] | undefined;
 }
 
 export class ModelResponse implements IModelResponse {

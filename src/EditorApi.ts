@@ -20,6 +20,7 @@ import {
     GlobalStresses,
     PutNodeClientCommand,
     ModelProposalResponse,
+    BeamOsObjectType,
     // SetColorFilter,
     // ShearDiagramResponse,
 } from "./EditorApi/EditorApiAlpha";
@@ -31,6 +32,7 @@ import { BeamOsPointLoad } from "./SceneObjects/BeamOsPointLoad";
 import { BeamOsDiagram } from "./SceneObjects/BeamOsDiagram";
 import { BeamOsDiagramByPoints } from "./SceneObjects/BeamOsDiagramByPoints";
 import CameraControls from "camera-controls";
+import { ColorFilterBuilder } from "./ColorFilterer";
 // import { BeamOsDiagram } from "./SceneObjects/BeamOsDiagram";
 // import { IBeamOsMesh } from "./BeamOsMesh";
 
@@ -39,6 +41,7 @@ export class EditorApi implements IEditorApiAlpha {
     private currentOverlay: THREE.Group;
     private currentProposal: THREE.Group;
     private gridGroup: THREE.Group | undefined;
+    private currentFilterer: ColorFilterBuilder | undefined;
 
     constructor(
         private camera: THREE.Camera,
@@ -61,6 +64,36 @@ export class EditorApi implements IEditorApiAlpha {
         throw new Error("Method not implemented.");
     }
     displayModelProposal(body: ModelProposalResponse): Promise<Result> {
+        console.log("displayModelProposal", body);
+        this.currentFilterer?.clear();
+        const filterer = ColorFilterBuilder.CreateFromAllGhostedScene(this.sceneRoot);
+
+        for (const el of body.deleteModelEntityProposals ?? []) {
+            if (el.objectType == BeamOsObjectType._3) // element1d
+            {
+                const existingElement = this.getObjectByBeamOsUniqueId<BeamOsElement1d>(
+                    BeamOsElement1d.beamOsObjectType + el.modelEntityId
+                );
+                filterer.add(
+                    existingElement,
+                    this.config.removeElement1dProposalHex,
+                    false,
+                    true
+                );
+            }
+            else if (el.objectType == BeamOsObjectType._2) // node
+            {
+                const existingNode = this.getObjectByBeamOsUniqueId<BeamOsNode>(
+                    BeamOsNode.beamOsObjectType + el.modelEntityId
+                );
+                filterer.add(
+                    existingNode,
+                    this.config.removeNodeProposalHex,
+                    false,
+                    true
+                );
+            }
+        }
         for (const node of body.createNodeProposals ?? []) {
             var newNode = new BeamOsNodeProposal(
                 undefined,
@@ -71,9 +104,11 @@ export class EditorApi implements IEditorApiAlpha {
                 node.restraint,
                 this.config.yAxisUp
             );
-            newNode.SetColorFilter(
+            filterer.add(
+                newNode,
                 this.config.createNodeProposalHex,
-                false
+                false,
+                true
             );
 
             this.addProposalObject(newNode);
@@ -84,8 +119,10 @@ export class EditorApi implements IEditorApiAlpha {
             var existingNode = this.getObjectByBeamOsUniqueId<BeamOsNode>(
                 BeamOsNode.beamOsObjectType + node.existingNodeId
             );
-            existingNode.SetColorFilter(
-                this.config.modifyNodeProposalHexExisting,
+            filterer.add(
+                existingNode,
+                this.config.createNodeProposalHex,
+                true,
                 true
             );
 
@@ -98,9 +135,11 @@ export class EditorApi implements IEditorApiAlpha {
                 node.restraint,
                 this.config.yAxisUp
             );
-            newNode.SetColorFilter(
+            filterer.add(
+                newNode,
                 this.config.modifyNodeProposalHexNew,
-                false
+                false,
+                true
             );
             nodeProposalsDict[existingNode.beamOsId] = newNode;
             this.addProposalObject(newNode);
@@ -144,9 +183,11 @@ export class EditorApi implements IEditorApiAlpha {
                 endNode,
                 this.config.defaultElement1dMaterial
             );
-            newElement1d.SetColorFilter(
+            filterer.add(
+                newElement1d,
                 this.config.createElement1dProposalHex,
-                false
+                false,
+                true
             );
 
             this.addProposalObject(newElement1d);
@@ -200,7 +241,12 @@ export class EditorApi implements IEditorApiAlpha {
             const endNodeChanged = existingElement.endNode.beamOsId !== endNode.beamOsId;
 
             // Highlight the existing element (ghost it)
-            existingElement.SetColorFilter(this.config.modifyNodeProposalHexExisting, true);
+            filterer.add(
+                existingElement,
+                this.config.modifyElement1dProposalHexExisting,
+                true,
+                true
+            );
 
             // Create the proposal element (new state)
             const newElement1dProposal = new BeamOsElement1dProposal(
@@ -213,13 +259,26 @@ export class EditorApi implements IEditorApiAlpha {
 
             // Set color filter based on what changed
             if (startNodeChanged || endNodeChanged) {
-                newElement1dProposal.SetColorFilter(this.config.modifyNodeProposalHexNew, false);
+                filterer.add(
+                    newElement1dProposal,
+                    this.config.modifyNodeProposalHexNew,
+                    false,
+                    true
+                );
             } else {
-                newElement1dProposal.SetColorFilter(this.config.createElement1dProposalHex, false);
+                filterer.add(
+                    newElement1dProposal,
+                    this.config.createElement1dProposalHex,
+                    false,
+                    true
+                );
             }
 
             this.addProposalObject(newElement1dProposal);
         }
+
+        filterer.apply();
+        this.currentFilterer = filterer;
 
         return Promise.resolve(ResultFactory.Success());
     }
@@ -243,7 +302,6 @@ export class EditorApi implements IEditorApiAlpha {
     }
 
     async createModel(modelResponse: ModelResponse): Promise<Result> {
-        console.log("Creating model with response", modelResponse);
         await this.clear();
         await this.setSettings(modelResponse.settings);
         modelResponse.nodes?.forEach(async (node) => {
@@ -599,11 +657,14 @@ export class EditorApi implements IEditorApiAlpha {
     }
 
     setSettings(body: ModelSettings): Promise<Result> {
-        console.log("Setting editor settings", body, this.config);
         // if (body.yAxisUp == this.config.yAxisUp) {
         //     return Promise.resolve(ResultFactory.Success());
         // }
         this.config.yAxisUp = body.yAxisUp;
+
+        if (this.gridGroup !== undefined) {
+            this.sceneRoot.remove(this.gridGroup);
+        }
 
         this.gridGroup = new THREE.Group();
         if (body.yAxisUp) {
