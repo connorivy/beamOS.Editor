@@ -75,6 +75,8 @@ export class EditorApi implements IEditorApiAlpha {
 
             this.addProposalObject(newNode);
         }
+        // create dictionary of nodeProposals
+        const nodeProposalsDict: { [key: string]: BeamOsNodeProposal } = {};
         for (const node of body.modifyNodeProposals ?? []) {
             var existingNode = this.getObjectByBeamOsUniqueId<BeamOsNode>(
                 BeamOsNode.beamOsObjectType + node.existingNodeId
@@ -97,6 +99,7 @@ export class EditorApi implements IEditorApiAlpha {
                 this.config.modifyNodeProposalHexNew,
                 false
             );
+            nodeProposalsDict[existingNode.beamOsId] = newNode;
             this.addProposalObject(newNode);
         }
 
@@ -155,9 +158,14 @@ export class EditorApi implements IEditorApiAlpha {
             // Find the start and end nodes for the proposal
             let startNode: BeamOsNode;
             if (el.startNodeId.existingId != undefined) {
-                startNode = this.getObjectByBeamOsUniqueId<BeamOsNode>(
-                    BeamOsNode.beamOsObjectType + el.startNodeId.existingId
-                );
+                if (nodeProposalsDict[el.startNodeId.existingId]) {
+                    startNode = nodeProposalsDict[el.startNodeId.existingId];
+                }
+                else {
+                    startNode = this.getObjectByBeamOsUniqueId<BeamOsNode>(
+                        BeamOsNode.beamOsObjectType + el.startNodeId.existingId
+                    );
+                }
             } else if (el.startNodeId.proposedId != undefined) {
                 startNode = this.getProposalObjectByBeamOsUniqueId<BeamOsNode>(
                     BeamOsNodeProposal.beamOsObjectType + el.startNodeId.proposedId
@@ -222,6 +230,7 @@ export class EditorApi implements IEditorApiAlpha {
     clear(): Promise<Result> {
         this.currentModel.clear();
         this.currentOverlay.clear();
+        this.currentProposal.clear();
         return Promise.resolve(ResultFactory.Success());
     }
 
