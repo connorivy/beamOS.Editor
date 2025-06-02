@@ -9,6 +9,7 @@ import {
 } from "./EditorApi/EditorEventsApi";
 import { EditorConfigurations } from "./EditorConfigurations";
 import { Line2 } from "three/examples/jsm/lines/Line2.js";
+import CameraControls from "camera-controls";
 
 export class Selector {
     private selectionBox: THREE.Box3Helper;
@@ -23,7 +24,8 @@ export class Selector {
         private raycastInfo: RaycastInfo,
         private selectorInfo: SelectorInfo,
         private transformController: TransformController,
-        private editorConfigurations: EditorConfigurations
+        private editorConfigurations: EditorConfigurations,
+        private controls: CameraControls
     ) {
         const box = new THREE.Box3();
         this.selectionBox = new THREE.Box3Helper(box);
@@ -64,6 +66,11 @@ export class Selector {
                     `Unable to get object with id ${this.raycastInfo.currentlyRaycasted.id} from scene`
                 );
             }
+            this.controls.setOrbitPoint(
+                raycastedMesh.position.x,
+                raycastedMesh.position.y,
+                raycastedMesh.position.z
+            );
             this.selectorInfo.currentSelection = [raycastedMesh];
             this.selectionBox.visible = true;
 
@@ -143,7 +150,7 @@ export class SelectorInfo {
     constructor(
         private dotnetDispatcherApi: IEditorEventsApi,
         private canvasId: string
-    ) {}
+    ) { }
 
     public get currentSelection(): IBeamOsMesh[] {
         return this._currentSelection;

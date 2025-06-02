@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import { Raycaster } from "./Raycaster";
-import { Controls } from "./Controls";
 import { TransformController } from "./TransformController";
 import { Selector, SelectorInfo } from "./Selector";
 import { EditorApi } from "./EditorApi";
@@ -10,6 +9,7 @@ import { EditorApi } from "./EditorApi";
 import { EditorConfigurations } from "./EditorConfigurations";
 import { IEditorEventsApi } from "./EditorApi/EditorEventsApi";
 import { DotnetApiFactory } from "./EditorApi/DotnetApiFactory";
+import CameraControls from "camera-controls";
 
 export class BeamOsEditor {
     public scene: THREE.Scene;
@@ -23,6 +23,8 @@ export class BeamOsEditor {
     public api: EditorApi;
     animationFrameId: number | undefined = undefined;
     observer: ResizeObserver;
+    private controls: CameraControls;
+    private clock: THREE.Clock = new THREE.Clock();
 
     constructor(
         public domElement: HTMLElement,
@@ -62,12 +64,13 @@ export class BeamOsEditor {
             this.mouse,
             this.camera
         );
-        const controls = new Controls(this.camera, this.domElement);
+        this.createCamera();
+        this.controls = new CameraControls(this.camera, this.domElement);
         this.transformController = new TransformController(
             this.scene,
             this.camera,
             this.domElement,
-            controls.controls,
+            this.controls,
             dotnetDispatcherApi
         );
         this.selector = new Selector(
@@ -77,7 +80,8 @@ export class BeamOsEditor {
             this.raycaster.raycastInfo,
             selectorInfo,
             this.transformController,
-            editorConfigurations
+            editorConfigurations,
+            this.controls
         );
 
         this.api = new EditorApi(this.sceneRoot, editorConfigurations);
@@ -116,6 +120,21 @@ export class BeamOsEditor {
         return new this(domElement, dotnetDispatcherApi, editorConfigurations);
     }
 
+    createCamera() {
+        const subsetOfTHREE = {
+            Vector2: THREE.Vector2,
+            Vector3: THREE.Vector3,
+            Vector4: THREE.Vector4,
+            Quaternion: THREE.Quaternion,
+            Matrix4: THREE.Matrix4,
+            Spherical: THREE.Spherical,
+            Box3: THREE.Box3,
+            Sphere: THREE.Sphere,
+            Raycaster: THREE.Raycaster,
+        };
+        CameraControls.install({ THREE: subsetOfTHREE });
+    }
+
     initCanvas() {
         this.scene.background = new THREE.Color(0x333333);
         this.scene.matrixWorldAutoUpdate = true;
@@ -151,6 +170,9 @@ export class BeamOsEditor {
     public animate() {
         this.animationFrameId = requestAnimationFrame(this.animate.bind(this));
 
+        const delta = this.clock.getDelta();
+        const elapsed = this.clock.getElapsedTime();
+        this.controls.update(delta);
         this.selector.animate();
 
         this.render();

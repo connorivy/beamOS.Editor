@@ -1,12 +1,12 @@
 import * as THREE from "three";
 import { TransformControls } from "three/addons/controls/TransformControls.js";
-import { OrbitControls } from "three/examples/jsm/Addons.js";
 import {
     Coordinate3D,
     IEditorEventsApi,
     MoveNodeCommand,
 } from "./EditorApi/EditorEventsApi";
 import { BeamOsNode } from "./SceneObjects/BeamOsNode";
+import CameraControls from "camera-controls";
 
 export class TransformController {
     public transformControl: TransformControls;
@@ -16,7 +16,7 @@ export class TransformController {
         scene: THREE.Scene,
         camera: THREE.Camera,
         private domElement: HTMLElement,
-        private controls: OrbitControls,
+        private controls: CameraControls,
         private dispatcher: IEditorEventsApi
     ) {
         this.transformControl = new TransformControls(camera, domElement);
