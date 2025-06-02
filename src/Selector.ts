@@ -66,10 +66,12 @@ export class Selector {
                     `Unable to get object with id ${this.raycastInfo.currentlyRaycasted.id} from scene`
                 );
             }
+
+            const position = raycastedMesh.GetPosition();
             this.controls.setOrbitPoint(
-                raycastedMesh.position.x,
-                raycastedMesh.position.y,
-                raycastedMesh.position.z
+                position.x,
+                position.y,
+                position.z
             );
             this.selectorInfo.currentSelection = [raycastedMesh];
             this.selectionBox.visible = true;

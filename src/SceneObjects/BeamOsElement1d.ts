@@ -77,6 +77,13 @@ export class BeamOsElement1d extends Line2 implements IBeamOsMesh {
         this.setPositions();
     }
 
+    public GetPosition(): THREE.Vector3 {
+        return BeamOsElement1d.GetMiddlePosition(
+            this.startNode.position,
+            this.endNode.position
+        );
+    }
+
     onNodeMoved(_event: any) {
         this.setPositions();
     }
@@ -91,6 +98,13 @@ export class BeamOsElement1d extends Line2 implements IBeamOsMesh {
             this.endNode.position.z,
         ]);
         this.geometry.attributes.position.needsUpdate = true;
+    }
+
+    static GetMiddlePosition(start: THREE.Vector3, end: THREE.Vector3): THREE.Vector3 {
+        let middleX = (start.x + end.x) / 2;
+        let middleY = (start.y + end.y) / 2;
+        let middleZ = (start.z + end.z) / 2;
+        return new THREE.Vector3(middleX, middleY, middleZ);
     }
 }
 

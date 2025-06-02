@@ -13,16 +13,16 @@ export interface IBeamOsMesh<
     material: TMaterial;
     SetColorFilter(color: number, ghost: boolean): void;
     RemoveColorFilter(): void;
+    GetPosition(): THREE.Vector3;
 }
 
 export abstract class BeamOsMesh<
-        TGeometry extends THREE.BufferGeometry = THREE.BufferGeometry,
-        TMaterial extends THREE.Material = THREE.Material,
-        TEventMap extends THREE.Object3DEventMap = THREE.Object3DEventMap
-    >
+    TGeometry extends THREE.BufferGeometry = THREE.BufferGeometry,
+    TMaterial extends THREE.Material = THREE.Material,
+    TEventMap extends THREE.Object3DEventMap = THREE.Object3DEventMap
+>
     extends THREE.Mesh<TGeometry, TMaterial, TEventMap>
-    implements IBeamOsMesh
-{
+    implements IBeamOsMesh {
     private previousMaterial: TMaterial | undefined;
     public beamOsUniqueId: string;
 
@@ -34,6 +34,10 @@ export abstract class BeamOsMesh<
     ) {
         super(geometry, material);
         this.beamOsUniqueId = this.beamOsObjectType + beamOsId;
+    }
+
+    public GetPosition(): THREE.Vector3 {
+        return this.position.clone();
     }
 
     public SetColorFilter(color: number, ghost: boolean) {

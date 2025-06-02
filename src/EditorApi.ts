@@ -30,6 +30,7 @@ import { BeamOsElement1d, BeamOsElement1dProposal } from "./SceneObjects/BeamOsE
 import { BeamOsPointLoad } from "./SceneObjects/BeamOsPointLoad";
 import { BeamOsDiagram } from "./SceneObjects/BeamOsDiagram";
 import { BeamOsDiagramByPoints } from "./SceneObjects/BeamOsDiagramByPoints";
+import CameraControls from "camera-controls";
 // import { BeamOsDiagram } from "./SceneObjects/BeamOsDiagram";
 // import { IBeamOsMesh } from "./BeamOsMesh";
 
@@ -37,8 +38,11 @@ export class EditorApi implements IEditorApiAlpha {
     private currentModel: THREE.Group;
     private currentOverlay: THREE.Group;
     private currentProposal: THREE.Group;
+    private gridGroup: THREE.Group | undefined;
 
     constructor(
+        private camera: THREE.Camera,
+        private controls: CameraControls,
         private sceneRoot: THREE.Group,
         private config: EditorConfigurations
     ) {
@@ -57,7 +61,6 @@ export class EditorApi implements IEditorApiAlpha {
         throw new Error("Method not implemented.");
     }
     displayModelProposal(body: ModelProposalResponse): Promise<Result> {
-        console.log("proposal", body);
         for (const node of body.createNodeProposals ?? []) {
             var newNode = new BeamOsNodeProposal(
                 undefined,
@@ -176,9 +179,14 @@ export class EditorApi implements IEditorApiAlpha {
 
             let endNode: BeamOsNode;
             if (el.endNodeId.existingId != undefined) {
-                endNode = this.getObjectByBeamOsUniqueId<BeamOsNode>(
-                    BeamOsNode.beamOsObjectType + el.endNodeId.existingId
-                );
+                if (nodeProposalsDict[el.endNodeId.existingId]) {
+                    endNode = nodeProposalsDict[el.endNodeId.existingId];
+                }
+                else {
+                    endNode = this.getObjectByBeamOsUniqueId<BeamOsNode>(
+                        BeamOsNode.beamOsObjectType + el.endNodeId.existingId
+                    );
+                }
             } else if (el.endNodeId.proposedId != undefined) {
                 endNode = this.getProposalObjectByBeamOsUniqueId<BeamOsNode>(
                     BeamOsNodeProposal.beamOsObjectType + el.endNodeId.proposedId
@@ -235,6 +243,9 @@ export class EditorApi implements IEditorApiAlpha {
     }
 
     async createModel(modelResponse: ModelResponse): Promise<Result> {
+        console.log("Creating model with response", modelResponse);
+        await this.clear();
+        await this.setSettings(modelResponse.settings);
         modelResponse.nodes?.forEach(async (node) => {
             await this.createNode(node);
         });
@@ -588,18 +599,32 @@ export class EditorApi implements IEditorApiAlpha {
     }
 
     setSettings(body: ModelSettings): Promise<Result> {
-        if (body.yAxisUp == this.config.yAxisUp) {
-            return Promise.resolve(ResultFactory.Success());
-        }
+        console.log("Setting editor settings", body, this.config);
+        // if (body.yAxisUp == this.config.yAxisUp) {
+        //     return Promise.resolve(ResultFactory.Success());
+        // }
         this.config.yAxisUp = body.yAxisUp;
 
+        this.gridGroup = new THREE.Group();
         if (body.yAxisUp) {
-            this.sceneRoot.rotateX(Math.PI / 2);
-            this.sceneRoot.up = new THREE.Vector3(0, 1, 0);
+            this.camera.up.set(0, 1, 0);
         } else {
-            this.sceneRoot.rotateX(-Math.PI / 2);
-            this.sceneRoot.up = new THREE.Vector3(0, 0, 1);
+            this.camera.up.set(0, 0, 1);
+            this.gridGroup.rotateX(Math.PI / 2);
         }
+        this.controls.updateCameraUp();
+
+        this.sceneRoot.add(this.gridGroup);
+
+        const grid1 = new THREE.GridHelper(30, 30, 0x282828);
+        grid1.material.color.setHex(0x282828);
+        grid1.material.vertexColors = false;
+        this.gridGroup.add(grid1);
+
+        const grid2 = new THREE.GridHelper(30, 6, 0x888888);
+        grid2.material.color.setHex(0x888888);
+        grid2.material.vertexColors = false;
+        this.gridGroup.add(grid2);
 
         return Promise.resolve(ResultFactory.Success());
     }

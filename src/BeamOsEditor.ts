@@ -36,8 +36,8 @@ export class BeamOsEditor {
 
         // z-up scene by default
         this.sceneRoot = new THREE.Group();
-        this.sceneRoot.rotateX(-Math.PI / 2);
-        this.sceneRoot.up = new THREE.Vector3(0, 0, 1);
+        // this.sceneRoot.rotateX(-Math.PI / 2);
+        // this.sceneRoot.up = new THREE.Vector3(0, 0, 1);
         this.scene.add(this.sceneRoot);
 
         this.camera = new THREE.PerspectiveCamera(
@@ -47,6 +47,8 @@ export class BeamOsEditor {
             1000
         );
         this.camera.position.set(5, 5, 10);
+        this.camera.up.set(0, 0, 1);
+        editorConfigurations.yAxisUp = false;
 
         const selectorInfo = new SelectorInfo(
             dotnetDispatcherApi,
@@ -81,10 +83,10 @@ export class BeamOsEditor {
             selectorInfo,
             this.transformController,
             editorConfigurations,
-            this.controls
+            this.controls,
         );
 
-        this.api = new EditorApi(this.sceneRoot, editorConfigurations);
+        this.api = new EditorApi(this.camera, this.controls, this.sceneRoot, editorConfigurations);
 
         const callback = this.resizeCanvasToDisplaySize.bind(this);
         this.observer = new ResizeObserver((entries) => {
@@ -151,7 +153,7 @@ export class BeamOsEditor {
         grid2.material.vertexColors = false;
         grid.add(grid2);
 
-        this.scene.add(grid);
+        //this.scene.add(grid);
     }
 
     resizeCanvasToDisplaySize(width: number, height: number) {
@@ -171,7 +173,8 @@ export class BeamOsEditor {
         this.animationFrameId = requestAnimationFrame(this.animate.bind(this));
 
         const delta = this.clock.getDelta();
-        const elapsed = this.clock.getElapsedTime();
+        //const elapsed = this.clock.getElapsedTime();
+        //console.log('camera up', this.camera.up);
         this.controls.update(delta);
         this.selector.animate();
 
