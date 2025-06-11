@@ -9,7 +9,7 @@ import { EditorApi } from "./EditorApi";
 import { EditorConfigurations } from "./EditorConfigurations";
 import { IEditorEventsApi } from "./EditorApi/EditorEventsApi";
 import { DotnetApiFactory } from "./EditorApi/DotnetApiFactory";
-import CameraControls from "camera-controls";
+import { Controls } from "./Controls";
 
 export class BeamOsEditor {
     public scene: THREE.Scene;
@@ -23,7 +23,7 @@ export class BeamOsEditor {
     public api: EditorApi;
     animationFrameId: number | undefined = undefined;
     observer: ResizeObserver;
-    private controls: CameraControls;
+    private controls: Controls;
     private clock: THREE.Clock = new THREE.Clock();
 
     constructor(
@@ -66,14 +66,8 @@ export class BeamOsEditor {
             this.mouse,
             this.camera
         );
-        this.createCamera();
-        this.controls = new CameraControls(this.camera, this.domElement);
-        this.controls.infinityDolly = true;
-        this.controls.dollyToCursor = true;
-        this.controls.minDistance = 1;
-        this.controls.maxDistance = 1000;
-        this.controls.mouseButtons.middle = THREE.MOUSE.RIGHT;
-        this.controls.mouseButtons.right = THREE.MOUSE.RIGHT;
+
+        this.controls = new Controls(this.camera, this.domElement);
         this.transformController = new TransformController(
             this.scene,
             this.camera,
@@ -89,10 +83,15 @@ export class BeamOsEditor {
             selectorInfo,
             this.transformController,
             editorConfigurations,
-            this.controls,
+            this.controls
         );
 
-        this.api = new EditorApi(this.camera, this.controls, this.sceneRoot, editorConfigurations);
+        this.api = new EditorApi(
+            this.camera,
+            this.controls,
+            this.sceneRoot,
+            editorConfigurations
+        );
 
         const callback = this.resizeCanvasToDisplaySize.bind(this);
         this.observer = new ResizeObserver((entries) => {
@@ -126,21 +125,6 @@ export class BeamOsEditor {
         let editorConfigurations = new EditorConfigurations(isReadOnly);
 
         return new this(domElement, dotnetDispatcherApi, editorConfigurations);
-    }
-
-    createCamera() {
-        const subsetOfTHREE = {
-            Vector2: THREE.Vector2,
-            Vector3: THREE.Vector3,
-            Vector4: THREE.Vector4,
-            Quaternion: THREE.Quaternion,
-            Matrix4: THREE.Matrix4,
-            Spherical: THREE.Spherical,
-            Box3: THREE.Box3,
-            Sphere: THREE.Sphere,
-            Raycaster: THREE.Raycaster,
-        };
-        CameraControls.install({ THREE: subsetOfTHREE });
     }
 
     initCanvas() {

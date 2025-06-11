@@ -27,14 +27,17 @@ import {
 import { EditorConfigurations } from "./EditorConfigurations";
 import { ResultFactory } from "./EditorApi/EditorApiAlphaExtensions";
 import { BeamOsNode, BeamOsNodeProposal } from "./SceneObjects/BeamOsNode";
-import { BeamOsElement1d, BeamOsElement1dProposal } from "./SceneObjects/BeamOsElement1d";
+import {
+    BeamOsElement1d,
+    BeamOsElement1dProposal,
+} from "./SceneObjects/BeamOsElement1d";
 import { BeamOsPointLoad } from "./SceneObjects/BeamOsPointLoad";
 import { BeamOsDiagram } from "./SceneObjects/BeamOsDiagram";
 import { BeamOsDiagramByPoints } from "./SceneObjects/BeamOsDiagramByPoints";
-import CameraControls from "camera-controls";
 import { ColorFilterBuilder } from "./ColorFilterer";
 import { ModelProposalDisplayer } from "./ModelProposalDisplayer";
 import { FilterStack } from "./FilterStack";
+import { Controls } from "./Controls";
 // import { BeamOsDiagram } from "./SceneObjects/BeamOsDiagram";
 // import { IBeamOsMesh } from "./BeamOsMesh";
 
@@ -48,7 +51,7 @@ export class EditorApi implements IEditorApiAlpha {
 
     constructor(
         private camera: THREE.Camera,
-        private controls: CameraControls,
+        private controls: Controls,
         private sceneRoot: THREE.Group,
         private config: EditorConfigurations
     ) {
@@ -72,7 +75,7 @@ export class EditorApi implements IEditorApiAlpha {
             this.currentProposal,
             this.currentModel,
             this.filterStack
-        )
+        );
 
         await proposalDisplayer.displayModelProposal(body);
         return ResultFactory.Success();
@@ -152,7 +155,6 @@ export class EditorApi implements IEditorApiAlpha {
             existing.ReplaceStartNode(startNode);
         }
         if (existing.endNode.beamOsId != body.endNodeId) {
-
             let endNode = this.getObjectByBeamOsUniqueId<BeamOsNode>(
                 BeamOsNode.beamOsObjectType + body.endNodeId
             );
@@ -524,7 +526,9 @@ export class EditorApi implements IEditorApiAlpha {
         );
     }
 
-    getProposalObjectByBeamOsUniqueId<TObject>(beamOsUniqueId: string): TObject {
+    getProposalObjectByBeamOsUniqueId<TObject>(
+        beamOsUniqueId: string
+    ): TObject {
         return (
             (this.currentProposal.getObjectByProperty(
                 "beamOsUniqueId",

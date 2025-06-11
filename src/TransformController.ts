@@ -6,7 +6,7 @@ import {
     MoveNodeCommand,
 } from "./EditorApi/EditorEventsApi";
 import { BeamOsNode } from "./SceneObjects/BeamOsNode";
-import CameraControls from "camera-controls";
+import { Controls } from "./Controls";
 
 export class TransformController {
     public transformControl: TransformControls;
@@ -16,7 +16,7 @@ export class TransformController {
         scene: THREE.Scene,
         camera: THREE.Camera,
         private domElement: HTMLElement,
-        private controls: CameraControls,
+        private controls: Controls,
         private dispatcher: IEditorEventsApi
     ) {
         this.transformControl = new TransformControls(camera, domElement);
@@ -53,7 +53,7 @@ export class TransformController {
                     }),
                     handledByBlazor: false,
                     handledByEditor: true,
-                    handledByServer: false
+                    handledByServer: false,
                 })
             );
 
