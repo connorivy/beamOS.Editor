@@ -21,6 +21,7 @@ export class Selector {
     private dragStart: THREE.Vector2 = new THREE.Vector2();
     private dragEnd: THREE.Vector2 = new THREE.Vector2();
     private selectionRectElement: HTMLDivElement | null = null;
+    private selectionGroup: THREE.Group = new THREE.Group();
 
     constructor(
         private domElement: HTMLElement,
@@ -30,11 +31,13 @@ export class Selector {
         private selectorInfo: SelectorInfo,
         private transformController: TransformController,
         private editorConfigurations: EditorConfigurations,
-        private controls: Controls
+        private controls: Controls,
+        private camera: THREE.Camera
     ) {
         const box = new THREE.Box3();
         this.selectionBox = new THREE.Box3Helper(box);
         this.scene.add(this.selectionBox);
+        this.scene.add(this.selectionGroup);
         this.onMouseUpFunc = this.onMouseUp.bind(this);
         this.selectClickedObject();
         this.createSelectionRectElement();
@@ -59,6 +62,7 @@ export class Selector {
         this.onDownPosition = this.mouse.clone();
         this.dragStart.set(event.clientX, event.clientY);
         this.isDragging = true;
+
         if (this.selectionRectElement) {
             const rect = this.domElement.getBoundingClientRect();
             const left = event.clientX - rect.left;
@@ -118,24 +122,43 @@ export class Selector {
                 );
             }
 
-            const position = raycastedMesh.GetPosition();
-            this.controls.setOrbitPoint(position.x, position.y, position.z);
-            this.selectorInfo.currentSelection = [raycastedMesh];
-            this.selectionBox.visible = true;
-
-            if (!this.editorConfigurations.isReadOnly) {
-                this.transformController.transformControl.attach(raycastedMesh);
-            }
-
-            // Use different box setting method based on object type
-            if (raycastedMesh instanceof Line2) {
-                this.setSelectionBoxFromLine(raycastedMesh);
-            } else if (isBeamOsMesh(raycastedMesh)) {
-                this.selectionBox.box.setFromObject(raycastedMesh);
-            }
+            this.setSelection([raycastedMesh]);
         } else {
             this.DeselectAll();
         }
+    }
+
+    private setSelection(
+        raycastedMeshes: (THREE.Object3D<THREE.Object3DEventMap> &
+            IBeamOsMesh<
+                THREE.BufferGeometry<THREE.NormalBufferAttributes>,
+                THREE.Material
+            >)[]
+    ) {
+        if (raycastedMeshes.length === 1) {
+            let raycastedMesh = raycastedMeshes[0];
+            const position = raycastedMesh.GetPosition();
+            this.controls.setOrbitPoint(position.x, position.y, position.z);
+        }
+
+        this.selectorInfo.currentSelection = raycastedMeshes;
+        this.selectionBox.visible = true;
+
+        // if (!this.editorConfigurations.isReadOnly) {
+        //     this.transformController.transformControl.attach(raycastedMesh);
+        // }
+
+        // Use different box setting method based on object type
+        raycastedMeshes.forEach((raycastedMesh) => {
+            if (raycastedMesh instanceof Line2) {
+                this.setSelectionBoxFromLine(raycastedMesh);
+            } else if (isBeamOsMesh(raycastedMesh)) {
+                const box = new THREE.Box3();
+                let selectionBox = new THREE.Box3Helper(box);
+                selectionBox.box.setFromObject(raycastedMesh);
+                this.selectionGroup.add(selectionBox);
+            }
+        });
     }
 
     private DeselectAll() {
@@ -144,11 +167,10 @@ export class Selector {
         }
         this.selectionBox.visible = false;
         this.selectorInfo.currentSelection = [];
+        this.selectionGroup.clear();
     }
 
     setSelectionBoxFromLine(line: Line2, padding: number = 0.1) {
-        const box = this.selectionBox.box;
-
         // Make sure the line's geometry has computed its bounding box
         if (!line.geometry.boundingBox) {
             line.geometry.computeBoundingBox();
@@ -157,6 +179,8 @@ export class Selector {
         if (line.geometry.boundingBox === null) {
             throw new Error("Line2 geometry has no bounding box");
         }
+        const box = new THREE.Box3();
+        let selectionBox = new THREE.Box3Helper(box);
 
         // Copy the geometry's bounding box
         box.copy(line.geometry.boundingBox);
@@ -170,6 +194,7 @@ export class Selector {
 
         // Store a flag to indicate this object has a custom box
         line.userData.hasCustomBox = true;
+        this.selectionGroup.add(selectionBox);
     }
 
     handleClick() {
@@ -188,16 +213,20 @@ export class Selector {
         const y2 = Math.max(this.dragStart.y, this.dragEnd.y) - rect.top;
 
         // Get camera
-        const camera = (this.scene as any).camera as THREE.Camera;
-        if (!camera) return;
+        const camera = this.camera;
 
         // Select all objects whose bounding box projects into the rectangle
-        const selected: IBeamOsMesh[] = [];
+        const selected: (THREE.Object3D<THREE.Object3DEventMap> &
+            IBeamOsMesh<
+                THREE.BufferGeometry<THREE.NormalBufferAttributes>,
+                THREE.Material
+            >)[] = [];
         this.scene.traverse((obj) => {
             if (isBeamOsMesh(obj)) {
                 const box = new THREE.Box3().setFromObject(
                     obj as unknown as THREE.Object3D
                 );
+                console.log("Bounding box:", box);
                 if (box.isEmpty()) return;
                 // Check all 8 corners
                 const points = [
@@ -221,29 +250,20 @@ export class Selector {
                         break;
                     }
                 }
+                console.log(
+                    `Object ${obj.beamOsId} in rect: ${inRect}, box: ${box.min.x},${box.min.y},${box.min.z} to ${box.max.x},${box.max.y},${box.max.z}`
+                );
                 if (inRect) {
                     selected.push(obj);
                 }
             }
         });
-        this.selectorInfo.currentSelection = selected;
-        this.selectionBox.visible = selected.length === 1;
-        if (selected.length === 1) {
-            if (selected[0] instanceof Line2) {
-                this.setSelectionBoxFromLine(selected[0]);
-            } else {
-                this.selectionBox.box.setFromObject(
-                    selected[0] as unknown as THREE.Object3D
-                );
-            }
+        if (selected.length === 0) {
+            this.DeselectAll();
+            return;
         }
-        if (!this.editorConfigurations.isReadOnly && selected.length === 1) {
-            this.transformController.transformControl.attach(
-                selected[0] as unknown as THREE.Object3D
-            );
-        } else {
-            this.transformController.transformControl.detach();
-        }
+
+        this.setSelection(selected);
     }
 
     private createFrustumFromScreenRect(

@@ -83,7 +83,8 @@ export class BeamOsEditor {
             selectorInfo,
             this.transformController,
             editorConfigurations,
-            this.controls
+            this.controls,
+            this.camera
         );
 
         this.api = new EditorApi(
