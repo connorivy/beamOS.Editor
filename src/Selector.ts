@@ -17,6 +17,11 @@ export class Selector {
     private onUpPosition: THREE.Vector2 = new THREE.Vector2(0, 0);
     private onMouseUpFunc: (_event: MouseEvent) => void;
 
+    private isDragging: boolean = false;
+    private dragStart: THREE.Vector2 = new THREE.Vector2();
+    private dragEnd: THREE.Vector2 = new THREE.Vector2();
+    private selectionRectElement: HTMLDivElement | null = null;
+
     constructor(
         private domElement: HTMLElement,
         private scene: THREE.Scene,
@@ -32,27 +37,73 @@ export class Selector {
         this.scene.add(this.selectionBox);
         this.onMouseUpFunc = this.onMouseUp.bind(this);
         this.selectClickedObject();
+        this.createSelectionRectElement();
 
         window.addEventListener("mousedown", this.onMouseDown.bind(this));
+        window.addEventListener("mousemove", this.onMouseMove.bind(this));
+    }
+
+    private createSelectionRectElement() {
+        this.selectionRectElement = document.createElement("div");
+        this.selectionRectElement.style.position = "absolute";
+        this.selectionRectElement.style.border = "1px dashed #00aaff";
+        this.selectionRectElement.style.background = "rgba(0,170,255,0.1)";
+        this.selectionRectElement.style.pointerEvents = "none";
+        this.selectionRectElement.style.display = "none";
+        this.selectionRectElement.style.zIndex = "1000";
+        this.domElement.parentElement?.appendChild(this.selectionRectElement);
     }
 
     onMouseDown(event: MouseEvent) {
-        // event.preventDefault();
-
         if (event.target !== this.domElement) return;
-
         this.onDownPosition = this.mouse.clone();
+        this.dragStart.set(event.clientX, event.clientY);
+        this.isDragging = true;
+        if (this.selectionRectElement) {
+            const rect = this.domElement.getBoundingClientRect();
+            const left = event.clientX - rect.left;
+            const top = event.clientY - rect.top;
+            this.selectionRectElement.style.left = `${left}px`;
+            this.selectionRectElement.style.top = `${top}px`;
+            this.selectionRectElement.style.width = "0px";
+            this.selectionRectElement.style.height = "0px";
+            this.selectionRectElement.style.display = "block";
+        }
 
         document.addEventListener("mouseup", this.onMouseUpFunc);
     }
 
+    onMouseMove(event: MouseEvent) {
+        if (!this.isDragging) return;
+        this.dragEnd.set(event.clientX, event.clientY);
+        if (this.selectionRectElement) {
+            const rect = this.domElement.getBoundingClientRect();
+            const x1 = this.dragStart.x - rect.left;
+            const y1 = this.dragStart.y - rect.top;
+            const x2 = this.dragEnd.x - rect.left;
+            const y2 = this.dragEnd.y - rect.top;
+            const x = Math.min(x1, x2);
+            const y = Math.min(y1, y2);
+            const w = Math.abs(x2 - x1);
+            const h = Math.abs(y2 - y1);
+            this.selectionRectElement.style.left = `${x}px`;
+            this.selectionRectElement.style.top = `${y}px`;
+            this.selectionRectElement.style.width = `${w}px`;
+            this.selectionRectElement.style.height = `${h}px`;
+        }
+    }
+
     onMouseUp(_event: MouseEvent) {
         this.onUpPosition = this.mouse.clone();
-
-        if (this.onDownPosition.distanceTo(this.onUpPosition) === 0) {
+        this.isDragging = false;
+        if (this.selectionRectElement) {
+            this.selectionRectElement.style.display = "none";
+        }
+        if (this.dragStart.distanceTo(this.dragEnd) > 2) {
+            this.handleDragSelect();
+        } else if (this.onDownPosition.distanceTo(this.onUpPosition) === 0) {
             this.handleClick();
         }
-
         document.removeEventListener("mouseup", this.onMouseUpFunc);
     }
 
@@ -127,6 +178,109 @@ export class Selector {
 
     handleDrag() {
         // todo
+    }
+
+    private handleDragSelect() {
+        const rect = this.domElement.getBoundingClientRect();
+        const x1 = Math.min(this.dragStart.x, this.dragEnd.x) - rect.left;
+        const y1 = Math.min(this.dragStart.y, this.dragEnd.y) - rect.top;
+        const x2 = Math.max(this.dragStart.x, this.dragEnd.x) - rect.left;
+        const y2 = Math.max(this.dragStart.y, this.dragEnd.y) - rect.top;
+
+        // Get camera
+        const camera = (this.scene as any).camera as THREE.Camera;
+        if (!camera) return;
+
+        // Select all objects whose bounding box projects into the rectangle
+        const selected: IBeamOsMesh[] = [];
+        this.scene.traverse((obj) => {
+            if (isBeamOsMesh(obj)) {
+                const box = new THREE.Box3().setFromObject(
+                    obj as unknown as THREE.Object3D
+                );
+                if (box.isEmpty()) return;
+                // Check all 8 corners
+                const points = [
+                    new THREE.Vector3(box.min.x, box.min.y, box.min.z),
+                    new THREE.Vector3(box.min.x, box.min.y, box.max.z),
+                    new THREE.Vector3(box.min.x, box.max.y, box.min.z),
+                    new THREE.Vector3(box.min.x, box.max.y, box.max.z),
+                    new THREE.Vector3(box.max.x, box.min.y, box.min.z),
+                    new THREE.Vector3(box.max.x, box.min.y, box.max.z),
+                    new THREE.Vector3(box.max.x, box.max.y, box.min.z),
+                    new THREE.Vector3(box.max.x, box.max.y, box.max.z),
+                ];
+                let inRect = false;
+                for (const p of points) {
+                    p.project(camera);
+                    // Convert from NDC to screen
+                    const sx = ((p.x + 1) / 2) * rect.width;
+                    const sy = ((-p.y + 1) / 2) * rect.height;
+                    if (sx >= x1 && sx <= x2 && sy >= y1 && sy <= y2) {
+                        inRect = true;
+                        break;
+                    }
+                }
+                if (inRect) {
+                    selected.push(obj);
+                }
+            }
+        });
+        this.selectorInfo.currentSelection = selected;
+        this.selectionBox.visible = selected.length === 1;
+        if (selected.length === 1) {
+            if (selected[0] instanceof Line2) {
+                this.setSelectionBoxFromLine(selected[0]);
+            } else {
+                this.selectionBox.box.setFromObject(
+                    selected[0] as unknown as THREE.Object3D
+                );
+            }
+        }
+        if (!this.editorConfigurations.isReadOnly && selected.length === 1) {
+            this.transformController.transformControl.attach(
+                selected[0] as unknown as THREE.Object3D
+            );
+        } else {
+            this.transformController.transformControl.detach();
+        }
+    }
+
+    private createFrustumFromScreenRect(
+        minNDC: THREE.Vector2,
+        maxNDC: THREE.Vector2,
+        camera: THREE.Camera
+    ): THREE.Frustum {
+        // Create 8 points in NDC, unproject to world, then build a frustum
+        const points = [
+            new THREE.Vector3(minNDC.x, minNDC.y, -1),
+            new THREE.Vector3(maxNDC.x, minNDC.y, -1),
+            new THREE.Vector3(maxNDC.x, maxNDC.y, -1),
+            new THREE.Vector3(minNDC.x, maxNDC.y, -1),
+            new THREE.Vector3(minNDC.x, minNDC.y, 1),
+            new THREE.Vector3(maxNDC.x, minNDC.y, 1),
+            new THREE.Vector3(maxNDC.x, maxNDC.y, 1),
+            new THREE.Vector3(minNDC.x, maxNDC.y, 1),
+        ];
+        for (const p of points) p.unproject(camera);
+        const frustum = new THREE.Frustum();
+        frustum.setFromProjectionMatrix(
+            new THREE.Matrix4()
+                .multiplyMatrices(
+                    camera.projectionMatrix,
+                    camera.matrixWorldInverse
+                )
+                .invert()
+        );
+        // This is a simplification; for more accurate selection, you may want to build a custom frustum from the 8 points
+        return frustum;
+    }
+
+    private boxIntersectsFrustum(
+        box: THREE.Box3,
+        frustum: THREE.Frustum
+    ): boolean {
+        return frustum.intersectsBox(box);
     }
 
     animate() {
