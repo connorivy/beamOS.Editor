@@ -68,6 +68,12 @@ export class BeamOsEditor {
         );
         this.createCamera();
         this.controls = new CameraControls(this.camera, this.domElement);
+        this.controls.infinityDolly = true;
+        this.controls.dollyToCursor = true;
+        this.controls.minDistance = 1;
+        this.controls.maxDistance = 1000;
+        this.controls.mouseButtons.middle = THREE.MOUSE.RIGHT;
+        this.controls.mouseButtons.right = THREE.MOUSE.RIGHT;
         this.transformController = new TransformController(
             this.scene,
             this.camera,
