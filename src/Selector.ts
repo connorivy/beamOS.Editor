@@ -10,12 +10,14 @@ import {
 import { EditorConfigurations } from "./EditorConfigurations";
 import { Line2 } from "three/examples/jsm/lines/Line2.js";
 import { Controls } from "./Controls";
+import { BeamOsElement1d } from "./SceneObjects/BeamOsElement1d";
 
 export class Selector {
-    private selectionBox: THREE.Box3Helper;
     private onDownPosition: THREE.Vector2 = new THREE.Vector2(0, 0);
     private onUpPosition: THREE.Vector2 = new THREE.Vector2(0, 0);
-    // private onMouseUpFunc: (_event: MouseEvent) => void;
+    private onMouseUpFunc: (_event: MouseEvent) => void;
+    private onMouseMoveFunc: (_event: MouseEvent) => void;
+    private onMouseDownFunc: (_event: MouseEvent) => void;
 
     private isDragging: boolean = false;
     private dragStart: THREE.Vector2 = new THREE.Vector2();
@@ -34,17 +36,17 @@ export class Selector {
         private controls: Controls,
         private camera: THREE.Camera
     ) {
-        const box = new THREE.Box3();
-        this.selectionBox = new THREE.Box3Helper(box);
-        this.scene.add(this.selectionBox);
         this.scene.add(this.selectionGroup);
-        // this.onMouseUpFunc = this.onMouseUp.bind(this);
         this.selectClickedObject();
         this.createSelectionRectElement();
 
-        window.addEventListener("mousedown", this.onMouseDown.bind(this));
-        window.addEventListener("mousemove", this.onMouseMove.bind(this));
-        window.addEventListener("mouseup", this.onMouseUp.bind(this));
+        this.onMouseDownFunc = this.onMouseDown.bind(this);
+        this.onMouseMoveFunc = this.onMouseMove.bind(this);
+        this.onMouseUpFunc = this.onMouseUp.bind(this);
+
+        domElement.addEventListener("mousedown", this.onMouseDownFunc);
+        domElement.addEventListener("mousemove", this.onMouseMoveFunc);
+        domElement.addEventListener("mouseup", this.onMouseUpFunc);
     }
 
     private createSelectionRectElement() {
@@ -59,7 +61,7 @@ export class Selector {
     }
 
     onMouseDown(event: MouseEvent) {
-        if (event.target !== this.domElement) return;
+        if (event.button !== 0) return; // Only handle left mouse button
         this.onDownPosition = this.mouse.clone();
         this.dragStart.set(event.clientX, event.clientY);
         this.isDragging = true;
@@ -77,6 +79,7 @@ export class Selector {
     }
 
     onMouseMove(event: MouseEvent) {
+        if (event.button !== 0) return; // Only handle left mouse button
         if (!this.isDragging) return;
         this.dragEnd.set(event.clientX, event.clientY);
         if (this.selectionRectElement) {
@@ -96,7 +99,8 @@ export class Selector {
         }
     }
 
-    onMouseUp(_event: MouseEvent) {
+    onMouseUp(event: MouseEvent) {
+        if (event.button !== 0) return; // Only handle left mouse button
         this.onUpPosition = this.mouse.clone();
         this.isDragging = false;
         if (this.selectionRectElement) {
@@ -132,6 +136,7 @@ export class Selector {
         raycastedMeshes: (THREE.Object3D<THREE.Object3DEventMap> &
             IBeamOsMesh)[]
     ) {
+        this.DeselectAll();
         if (raycastedMeshes.length === 1) {
             let raycastedMesh = raycastedMeshes[0];
             const position = raycastedMesh.GetPosition();
@@ -139,7 +144,6 @@ export class Selector {
         }
 
         this.selectorInfo.currentSelection = raycastedMeshes;
-        this.selectionBox.visible = true;
 
         // if (!this.editorConfigurations.isReadOnly) {
         //     this.transformController.transformControl.attach(raycastedMesh);
@@ -147,10 +151,7 @@ export class Selector {
 
         // Use different box setting method based on object type
         raycastedMeshes.forEach((raycastedMesh) => {
-            if (raycastedMesh instanceof Line2) {
-                console.log(
-                    `Setting selection box for Line2 with id ${raycastedMesh.beamOsId}`
-                );
+            if (raycastedMesh instanceof BeamOsElement1d) {
                 this.setSelectionBoxFromLine(raycastedMesh);
             } else if (isBeamOsMesh(raycastedMesh)) {
                 const box = new THREE.Box3();
@@ -165,36 +166,54 @@ export class Selector {
         if (!this.editorConfigurations.isReadOnly) {
             this.transformController.transformControl.detach();
         }
-        this.selectionBox.visible = false;
         this.selectorInfo.currentSelection = [];
         this.selectionGroup.clear();
     }
 
-    setSelectionBoxFromLine(line: Line2, padding: number = 0.1) {
-        // Make sure the line's geometry has computed its bounding box
-        if (!line.geometry.boundingBox) {
-            line.geometry.computeBoundingBox();
-        }
+    setSelectionBoxFromLine(element: BeamOsElement1d, padding: number = 0.1) {
+        // Get start and end points in world coordinates
+        const start = element.startNode.position.clone();
+        const end = element.endNode.position.clone();
 
-        if (line.geometry.boundingBox === null) {
-            throw new Error("Line2 geometry has no bounding box");
-        }
-        const box = new THREE.Box3();
-        let selectionBox = new THREE.Box3Helper(box);
+        // Compute direction and length
+        const direction = new THREE.Vector3().subVectors(end, start);
+        const length = direction.length();
+        direction.normalize();
 
-        // Copy the geometry's bounding box
-        box.copy(line.geometry.boundingBox);
+        // Compute midpoint
+        const mid = new THREE.Vector3()
+            .addVectors(start, end)
+            .multiplyScalar(0.5);
 
-        // Transform the box to world space using the line's world matrix
-        box.applyMatrix4(line.matrixWorld);
+        // Box dimensions: long axis = length + 2*padding, other axes = thickness
+        const thickness = padding * 2; // or use element thickness if available
+        const boxGeometry = new THREE.BoxGeometry(
+            length + 2 * padding,
+            thickness,
+            thickness
+        );
 
-        // Add padding
-        box.min.subScalar(padding);
-        box.max.addScalar(padding);
+        // Create a wireframe or transparent mesh for selection
+        const boxMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00aaff,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.5,
+            depthTest: false,
+        });
+        const selectionMesh = new THREE.Mesh(boxGeometry, boxMaterial);
 
-        // Store a flag to indicate this object has a custom box
-        line.userData.hasCustomBox = true;
-        this.selectionGroup.add(selectionBox);
+        // Align box with element direction (default box is along X axis)
+        // Find quaternion that rotates X axis to direction
+        const quat = new THREE.Quaternion();
+        quat.setFromUnitVectors(new THREE.Vector3(1, 0, 0), direction);
+        selectionMesh.setRotationFromQuaternion(quat);
+
+        // Position at midpoint
+        selectionMesh.position.copy(mid);
+
+        // Add to selection group
+        this.selectionGroup.add(selectionMesh);
     }
 
     handleClick() {
@@ -292,14 +311,27 @@ export class Selector {
 
     animate() {
         //selection box should reflect current animation state
-        if (this.selectorInfo.currentSelection.length > 0) {
-            let selectedMesh = this.selectorInfo.currentSelection[0];
-            if (selectedMesh instanceof Line2) {
-                this.setSelectionBoxFromLine(selectedMesh);
-            } else if (selectedMesh instanceof THREE.Object3D) {
-                this.selectionBox.box.setFromObject(selectedMesh);
-            }
+        // if (this.selectorInfo.currentSelection.length > 0) {
+        //     let selectedMesh = this.selectorInfo.currentSelection[0];
+        //     if (selectedMesh instanceof BeamOsElement1d) {
+        //         this.setSelectionBoxFromLine(selectedMesh);
+        //     } else if (selectedMesh instanceof THREE.Object3D) {
+        //         this.selectionBox.box.setFromObject(selectedMesh);
+        //     }
+        // }
+    }
+
+    public dispose() {
+        this.domElement.removeEventListener("mousedown", this.onMouseDownFunc);
+        this.domElement.removeEventListener("mousemove", this.onMouseMoveFunc);
+        this.domElement.removeEventListener("mouseup", this.onMouseUpFunc);
+
+        if (this.selectionRectElement) {
+            this.selectionRectElement.remove();
+            this.selectionRectElement = null;
         }
+
+        this.scene.remove(this.selectionGroup);
     }
 }
 

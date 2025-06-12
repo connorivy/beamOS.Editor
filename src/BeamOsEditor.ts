@@ -10,11 +10,12 @@ import { EditorConfigurations } from "./EditorConfigurations";
 import { IEditorEventsApi } from "./EditorApi/EditorEventsApi";
 import { DotnetApiFactory } from "./EditorApi/DotnetApiFactory";
 import { Controls } from "./Controls";
+import { Camera } from "./Camera";
 
 export class BeamOsEditor {
     public scene: THREE.Scene;
     sceneRoot: THREE.Group;
-    camera: THREE.PerspectiveCamera;
+    camera: Camera;
     renderer: THREE.WebGLRenderer;
     mouse: THREE.Vector2;
     raycaster: Raycaster;
@@ -40,14 +41,14 @@ export class BeamOsEditor {
         // this.sceneRoot.up = new THREE.Vector3(0, 0, 1);
         this.scene.add(this.sceneRoot);
 
-        this.camera = new THREE.PerspectiveCamera(
-            50,
-            window.innerWidth / window.innerHeight,
-            0.1,
-            1000
-        );
-        this.camera.position.set(5, 5, 10);
-        this.camera.up.set(0, 0, 1);
+        const group = new THREE.Group();
+        this.scene.add(group);
+        this.camera = new Camera(this.domElement, group);
+        document.addEventListener("keydown", (event: KeyboardEvent) => {
+            if (event.key === "c") {
+                this.handleCameraSwitch();
+            }
+        });
         editorConfigurations.yAxisUp = false;
 
         const selectorInfo = new SelectorInfo(
@@ -64,13 +65,13 @@ export class BeamOsEditor {
             this.renderer,
             this.scene,
             this.mouse,
-            this.camera
+            this.camera.camera
         );
 
-        this.controls = new Controls(this.camera, this.domElement);
+        this.controls = new Controls(this.camera.camera, this.domElement);
         this.transformController = new TransformController(
             this.scene,
-            this.camera,
+            this.camera.camera,
             this.domElement,
             this.controls,
             dotnetDispatcherApi
@@ -84,11 +85,11 @@ export class BeamOsEditor {
             this.transformController,
             editorConfigurations,
             this.controls,
-            this.camera
+            this.camera.camera
         );
 
         this.api = new EditorApi(
-            this.camera,
+            this.camera.camera,
             this.controls,
             this.sceneRoot,
             editorConfigurations
@@ -150,8 +151,13 @@ export class BeamOsEditor {
     resizeCanvasToDisplaySize(width: number, height: number) {
         // you must pass false here or three.js sadly fights the browser
         this.renderer.setSize(width, height, false);
-        this.camera.aspect = width / height;
-        this.camera.updateProjectionMatrix();
+
+        if (this.camera instanceof THREE.PerspectiveCamera) {
+            this.camera.aspect = width / height;
+            this.camera.updateProjectionMatrix();
+        } else if (this.camera instanceof THREE.OrthographicCamera) {
+            this.camera.updateProjectionMatrix();
+        }
 
         // set matLine resolution
         this.editorConfigurations.defaultElement1dMaterial.resolution.set(
@@ -173,7 +179,7 @@ export class BeamOsEditor {
     }
 
     render() {
-        this.renderer.render(this.scene, this.camera);
+        this.renderer.render(this.scene, this.camera.getCamera());
 
         this.raycaster.raycast();
     }
@@ -199,5 +205,67 @@ export class BeamOsEditor {
 
         // unsure if this is necessary
         this.renderer.dispose();
+    }
+
+    /**
+     * Switches between perspective and orthographic cameras and updates all dependent objects.
+     */
+    public handleCameraSwitch() {
+        // Switch the camera type (handled by Camera class)
+        const lookAtTarget = this.camera.switchCamera();
+
+        // Recreate controls with the new camera
+        this.controls = new Controls(this.camera.camera, this.domElement);
+
+        this.camera.lookAt(
+            lookAtTarget.x,
+            lookAtTarget.y,
+            lookAtTarget.z,
+            this.controls
+        );
+
+        // Recreate transformController with the new camera and controls
+        this.transformController = new TransformController(
+            this.scene,
+            this.camera.camera,
+            this.domElement,
+            this.controls,
+            this.dotnetDispatcherApi
+        );
+
+        // Recreate selector with the new camera, controls, and transformController
+        const selectorInfo = new SelectorInfo(
+            this.dotnetDispatcherApi,
+            this.domElement.id
+        );
+
+        // Recreate raycaster with the new camera
+        this.raycaster = new Raycaster(
+            this.renderer,
+            this.scene,
+            this.mouse,
+            this.camera.camera
+        );
+
+        this.selector.dispose(); // Dispose of the old selector
+        this.selector = new Selector(
+            this.domElement,
+            this.scene,
+            this.mouse,
+            this.raycaster.raycastInfo,
+            selectorInfo,
+            this.transformController,
+            this.editorConfigurations,
+            this.controls,
+            this.camera.camera
+        );
+
+        // Recreate API with the new camera and controls
+        this.api = new EditorApi(
+            this.camera.camera,
+            this.controls,
+            this.sceneRoot,
+            this.editorConfigurations
+        );
     }
 }

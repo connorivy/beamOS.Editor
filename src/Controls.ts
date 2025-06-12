@@ -5,13 +5,33 @@ import CameraControls from "camera-controls";
 
 export class Controls {
     private cameraControls: CameraControls;
+    private handleShiftKeyDownFunc: (_event: KeyboardEvent) => void;
+    private handleShiftKeyUpFunc: (_event: KeyboardEvent) => void;
 
     constructor(
         private camera: THREE.PerspectiveCamera | THREE.OrthographicCamera,
         private domElement: HTMLElement
     ) {
         this.cameraControls = this.createCameraControls();
+        this.handleShiftKeyDownFunc = this.handleShiftKeyDown.bind(this);
+        this.handleShiftKeyUpFunc = this.handleShiftKeyUp.bind(this);
+
+        window.addEventListener("keydown", this.handleShiftKeyDownFunc);
+        window.addEventListener("keyup", this.handleShiftKeyUpFunc);
     }
+
+    private handleShiftKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Shift") {
+            this.cameraControls.mouseButtons.middle =
+                CameraControls.ACTION.ROTATE;
+        }
+    };
+    private handleShiftKeyUp = (e: KeyboardEvent) => {
+        if (e.key === "Shift") {
+            this.cameraControls.mouseButtons.middle =
+                CameraControls.ACTION.TRUCK;
+        }
+    };
 
     private createCameraControls(): CameraControls {
         const subsetOfTHREE = {
@@ -37,19 +57,6 @@ export class Controls {
         cameraControls.mouseButtons.right = THREE.MOUSE.RIGHT;
         cameraControls.mouseButtons.middle = CameraControls.ACTION.TRUCK;
 
-        window.addEventListener("keydown", (e: KeyboardEvent) => {
-            if (e.key === "Shift") {
-                cameraControls.mouseButtons.middle =
-                    CameraControls.ACTION.ROTATE;
-            }
-        });
-        window.addEventListener("keyup", (e: KeyboardEvent) => {
-            if (e.key === "Shift") {
-                cameraControls.mouseButtons.middle =
-                    CameraControls.ACTION.TRUCK;
-            }
-        });
-
         return cameraControls;
     }
 
@@ -61,6 +68,9 @@ export class Controls {
         this.cameraControls.enabled = value;
     }
 
+    setOrbitPointFromVector(vector: THREE.Vector3) {
+        this.setOrbitPoint(vector.x, vector.y, vector.z);
+    }
     setOrbitPoint(x: number, y: number, z: number) {
         this.cameraControls.setOrbitPoint(x, y, z);
     }
@@ -69,6 +79,9 @@ export class Controls {
     }
     update(delta: number) {
         this.cameraControls.update(delta);
+    }
+    public lookAt(x: number, y: number, z: number) {
+        this.cameraControls.setTarget(x, y, z);
     }
 
     useRevitControls(
@@ -96,5 +109,11 @@ export class Controls {
     onDraggingChanged(event: DragEvent) {
         console.log(event);
         // this.controls.enabled = event.
+    }
+
+    public dispose() {
+        this.cameraControls.dispose();
+        window.removeEventListener("keydown", this.handleShiftKeyDownFunc);
+        window.removeEventListener("keyup", this.handleShiftKeyUpFunc);
     }
 }
