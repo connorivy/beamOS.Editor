@@ -43,7 +43,7 @@ export class BeamOsEditor {
 
         const group = new THREE.Group();
         this.scene.add(group);
-        this.camera = new Camera(this.domElement, group);
+        this.camera = new Camera(this.domElement);
         document.addEventListener("keydown", (event: KeyboardEvent) => {
             if (event.key === "c") {
                 this.handleCameraSwitch();
@@ -152,12 +152,11 @@ export class BeamOsEditor {
         // you must pass false here or three.js sadly fights the browser
         this.renderer.setSize(width, height, false);
 
-        if (this.camera instanceof THREE.PerspectiveCamera) {
-            this.camera.aspect = width / height;
-            this.camera.updateProjectionMatrix();
-        } else if (this.camera instanceof THREE.OrthographicCamera) {
-            this.camera.updateProjectionMatrix();
+        if (this.camera.camera instanceof THREE.PerspectiveCamera) {
+            this.camera.camera.aspect = width / height;
+        } else if (this.camera.camera instanceof THREE.OrthographicCamera) {
         }
+        this.camera.camera.updateProjectionMatrix();
 
         // set matLine resolution
         this.editorConfigurations.defaultElement1dMaterial.resolution.set(
@@ -179,7 +178,7 @@ export class BeamOsEditor {
     }
 
     render() {
-        this.renderer.render(this.scene, this.camera.getCamera());
+        this.renderer.render(this.scene, this.camera.camera);
 
         this.raycaster.raycast();
     }

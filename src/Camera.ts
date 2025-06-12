@@ -1,13 +1,11 @@
 import * as THREE from "three";
 import { Controls } from "./Controls";
-import { Vector } from "three/examples/jsm/Addons.js";
 
 export class Camera {
     public camera: THREE.PerspectiveCamera | THREE.OrthographicCamera;
 
     constructor(
         public domElement: HTMLElement,
-        public group: THREE.Group,
         public aspectRatio: number = window.innerWidth / window.innerHeight
     ) {
         const cameraPosition = new THREE.Vector3(5, 5, 10);
@@ -51,7 +49,6 @@ export class Camera {
     }
 
     switchCamera(): THREE.Vector3 {
-        this.group.clear();
         let target = new THREE.Vector3(0, 0, -1);
         if (this.camera instanceof THREE.PerspectiveCamera) {
             const position = this.camera.position.clone();
@@ -76,16 +73,8 @@ export class Camera {
             const lookAtTarget = position
                 .clone()
                 .add(target.multiplyScalar(10));
-
-            // add sphere at the lookAtTarget position
-            const sphereGeometry = new THREE.SphereGeometry(0.1, 16, 16);
-            const sphereMaterial = new THREE.MeshBasicMaterial({
-                color: 0xff0000,
-            });
-            const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-            sphere.position.copy(lookAtTarget);
-            this.group.add(sphere);
             orthoCamera.lookAt(lookAtTarget);
+
             console.log(
                 `Switched to orth camera with FOV: ${fov}, position: ${position.toArray()}, up: ${up.toArray()}, lookAt: ${lookAtTarget.toArray()}`
             );
@@ -116,15 +105,6 @@ export class Camera {
             const lookAtTarget = position
                 .clone()
                 .add(target.multiplyScalar(10));
-
-            // add sphere at the lookAtTarget position
-            const sphereGeometry = new THREE.SphereGeometry(0.1, 16, 16);
-            const sphereMaterial = new THREE.MeshBasicMaterial({
-                color: 0xff0000,
-            });
-            const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-            sphere.position.copy(lookAtTarget);
-            this.group.add(sphere);
 
             perspCamera.lookAt(lookAtTarget);
             console.log(
