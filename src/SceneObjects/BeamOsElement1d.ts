@@ -3,6 +3,11 @@ import { Line2 } from "three/examples/jsm/lines/Line2.js";
 import { LineGeometry, LineMaterial } from "three/examples/jsm/Addons.js";
 import { BeamOsNode } from "./BeamOsNode";
 import { IBeamOsMesh } from "../BeamOsMesh";
+import { BeamOsObjectType } from "../EditorApi/EditorEventsApi";
+import {
+    BeamOsObjectTypes,
+    objectTypeToString,
+} from "../EditorApi/EditorApiAlphaExtensions";
 
 export interface NodeEventMap extends THREE.Object3DEventMap {
     moved: { value: THREE.Vector3 };
@@ -10,8 +15,9 @@ export interface NodeEventMap extends THREE.Object3DEventMap {
 
 export class BeamOsElement1d extends Line2 implements IBeamOsMesh {
     public static lineThickness: number = 0.1;
-    public static beamOsObjectType: string = "Element1d";
-    public beamOsObjectType: string;
+    public static beamOsObjectType: BeamOsObjectType =
+        BeamOsObjectTypes.Element1d;
+    public beamOsObjectType: BeamOsObjectType;
     private onNodeMovedFunc: (_event: any) => void;
     private previousMaterial: LineMaterial | undefined;
     public beamOsUniqueId: string;
@@ -21,12 +27,12 @@ export class BeamOsElement1d extends Line2 implements IBeamOsMesh {
         public startNode: BeamOsNode,
         public endNode: BeamOsNode,
         lineMaterial: LineMaterial,
-        objectType: string = BeamOsElement1d.beamOsObjectType
+        objectType: BeamOsObjectType = BeamOsElement1d.beamOsObjectType
     ) {
         super(new LineGeometry(), lineMaterial);
 
         this.beamOsObjectType = objectType;
-        this.beamOsUniqueId = objectType + beamOsId;
+        this.beamOsUniqueId = objectTypeToString(objectType) + beamOsId;
         this.onNodeMovedFunc = this.onNodeMoved.bind(this);
 
         this.setPositions();
@@ -100,7 +106,10 @@ export class BeamOsElement1d extends Line2 implements IBeamOsMesh {
         this.geometry.attributes.position.needsUpdate = true;
     }
 
-    static GetMiddlePosition(start: THREE.Vector3, end: THREE.Vector3): THREE.Vector3 {
+    static GetMiddlePosition(
+        start: THREE.Vector3,
+        end: THREE.Vector3
+    ): THREE.Vector3 {
         let middleX = (start.x + end.x) / 2;
         let middleY = (start.y + end.y) / 2;
         let middleZ = (start.z + end.z) / 2;
@@ -109,7 +118,8 @@ export class BeamOsElement1d extends Line2 implements IBeamOsMesh {
 }
 
 export class BeamOsElement1dProposal extends BeamOsElement1d {
-    public static beamOsObjectType: string = "Element1dProposal";
+    public static beamOsObjectType: BeamOsObjectType =
+        BeamOsObjectTypes.Element1dProposal;
     constructor(
         public existingElementId: number | undefined,
         beamOsId: number,

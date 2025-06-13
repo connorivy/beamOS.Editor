@@ -1,5 +1,7 @@
 import * as THREE from "three";
 import { Raycaster } from "./Raycaster";
+import { BeamOsObjectType } from "./EditorApi/EditorEventsApi";
+import { objectTypeToString } from "./EditorApi/EditorApiAlphaExtensions";
 
 export interface IBeamOsMesh<
     TGeometry extends THREE.BufferGeometry = THREE.BufferGeometry,
@@ -8,7 +10,7 @@ export interface IBeamOsMesh<
     id: number;
     beamOsId: number;
     beamOsUniqueId: string;
-    beamOsObjectType: string;
+    beamOsObjectType: BeamOsObjectType;
     geometry: TGeometry;
     material: TMaterial;
     SetColorFilter(color: number, ghost: boolean): void;
@@ -17,23 +19,25 @@ export interface IBeamOsMesh<
 }
 
 export abstract class BeamOsMesh<
-    TGeometry extends THREE.BufferGeometry = THREE.BufferGeometry,
-    TMaterial extends THREE.Material = THREE.Material,
-    TEventMap extends THREE.Object3DEventMap = THREE.Object3DEventMap
->
+        TGeometry extends THREE.BufferGeometry = THREE.BufferGeometry,
+        TMaterial extends THREE.Material = THREE.Material,
+        TEventMap extends THREE.Object3DEventMap = THREE.Object3DEventMap
+    >
     extends THREE.Mesh<TGeometry, TMaterial, TEventMap>
-    implements IBeamOsMesh {
+    implements IBeamOsMesh
+{
     private previousMaterial: TMaterial | undefined;
     public beamOsUniqueId: string;
 
     constructor(
         public beamOsId: number,
-        public beamOsObjectType: string,
+        public beamOsObjectType: BeamOsObjectType,
         geometry?: TGeometry,
         material?: TMaterial
     ) {
         super(geometry, material);
-        this.beamOsUniqueId = this.beamOsObjectType + beamOsId;
+        this.beamOsUniqueId =
+            objectTypeToString(this.beamOsObjectType) + beamOsId;
     }
 
     public GetPosition(): THREE.Vector3 {

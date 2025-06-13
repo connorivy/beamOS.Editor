@@ -25,16 +25,15 @@ import {
     // ShearDiagramResponse,
 } from "./EditorApi/EditorApiAlpha";
 import { EditorConfigurations } from "./EditorConfigurations";
-import { ResultFactory } from "./EditorApi/EditorApiAlphaExtensions";
-import { BeamOsNode, BeamOsNodeProposal } from "./SceneObjects/BeamOsNode";
 import {
-    BeamOsElement1d,
-    BeamOsElement1dProposal,
-} from "./SceneObjects/BeamOsElement1d";
+    objectTypeToString,
+    ResultFactory,
+} from "./EditorApi/EditorApiAlphaExtensions";
+import { BeamOsNode } from "./SceneObjects/BeamOsNode";
+import { BeamOsElement1d } from "./SceneObjects/BeamOsElement1d";
 import { BeamOsPointLoad } from "./SceneObjects/BeamOsPointLoad";
 import { BeamOsDiagram } from "./SceneObjects/BeamOsDiagram";
 import { BeamOsDiagramByPoints } from "./SceneObjects/BeamOsDiagramByPoints";
-import { ColorFilterBuilder } from "./ColorFilterer";
 import { ModelProposalDisplayer } from "./ModelProposalDisplayer";
 import { FilterStack } from "./FilterStack";
 import { Controls } from "./Controls";
@@ -46,7 +45,7 @@ export class EditorApi implements IEditorApiAlpha {
     private currentOverlay: THREE.Group;
     private currentProposal: THREE.Group;
     private gridGroup: THREE.Group | undefined;
-    private currentFilterer: ColorFilterBuilder | undefined;
+    // private currentFilterer: ColorFilterBuilder | undefined;
     private filterStack: FilterStack = new FilterStack();
 
     constructor(
@@ -63,10 +62,10 @@ export class EditorApi implements IEditorApiAlpha {
         this.sceneRoot.add(this.currentOverlay);
     }
 
-    updatePointLoad(body: PointLoadResponse): Promise<Result> {
+    updatePointLoad(_: PointLoadResponse): Promise<Result> {
         throw new Error("Method not implemented.");
     }
-    updatePointLoads(body: PointLoadResponse[]): Promise<Result> {
+    updatePointLoads(_: PointLoadResponse[]): Promise<Result> {
         throw new Error("Method not implemented.");
     }
     async displayModelProposal(body: ModelProposalResponse): Promise<Result> {
@@ -145,18 +144,21 @@ export class EditorApi implements IEditorApiAlpha {
 
     updateElement1d(body: Element1dResponse): Promise<Result> {
         let existing = this.getObjectByBeamOsUniqueId<BeamOsElement1d>(
-            BeamOsElement1d.beamOsObjectType + body.id
+            BeamOsElement1d.beamOsObjectType,
+            body.id
         );
 
         if (existing.startNode.beamOsId != body.startNodeId) {
             let startNode = this.getObjectByBeamOsUniqueId<BeamOsNode>(
-                BeamOsNode.beamOsObjectType + body.startNodeId
+                BeamOsNode.beamOsObjectType,
+                body.startNodeId
             );
             existing.ReplaceStartNode(startNode);
         }
         if (existing.endNode.beamOsId != body.endNodeId) {
             let endNode = this.getObjectByBeamOsUniqueId<BeamOsNode>(
-                BeamOsNode.beamOsObjectType + body.endNodeId
+                BeamOsNode.beamOsObjectType,
+                body.endNodeId
             );
             existing.ReplaceEndNode(endNode);
         }
@@ -173,7 +175,8 @@ export class EditorApi implements IEditorApiAlpha {
 
     deleteElement1d(body: IModelEntity): Promise<Result> {
         let el = this.getObjectByBeamOsUniqueId<BeamOsElement1d>(
-            BeamOsElement1d.beamOsObjectType + body.id
+            BeamOsElement1d.beamOsObjectType,
+            body.id
         );
 
         this.removeObject3D(el);
@@ -208,7 +211,8 @@ export class EditorApi implements IEditorApiAlpha {
     }
     createNode(nodeResponse: NodeResponse): Promise<Result> {
         let node = this.tryGetObjectByBeamOsUniqueId<BeamOsNode>(
-            BeamOsNode.beamOsObjectType + nodeResponse.id
+            BeamOsNode.beamOsObjectType,
+            nodeResponse.id
         );
 
         if (node != null) {
@@ -235,8 +239,10 @@ export class EditorApi implements IEditorApiAlpha {
     }
 
     updateNode(body: NodeResponse): Promise<Result> {
-        const nodeId = BeamOsNode.beamOsObjectType + body.id;
-        let node = this.getObjectByBeamOsUniqueId<BeamOsNode>(nodeId);
+        let node = this.getObjectByBeamOsUniqueId<BeamOsNode>(
+            BeamOsNode.beamOsObjectType,
+            body.id
+        );
 
         // Update existing node - position
         node.xCoordinate = body.locationPoint.x;
@@ -261,7 +267,8 @@ export class EditorApi implements IEditorApiAlpha {
 
     deleteNode(body: IModelEntity): Promise<Result> {
         let el = this.getObjectByBeamOsUniqueId<BeamOsNode>(
-            BeamOsNode.beamOsObjectType + body.id
+            BeamOsNode.beamOsObjectType,
+            body.id
         );
 
         this.removeObject3D(el);
@@ -285,7 +292,8 @@ export class EditorApi implements IEditorApiAlpha {
 
     createPointLoad(body: PointLoadResponse): Promise<Result> {
         const node = this.getObjectByBeamOsUniqueId<BeamOsNode>(
-            BeamOsNode.beamOsObjectType + body.nodeId
+            BeamOsNode.beamOsObjectType,
+            body.nodeId
         );
         const pointLoad = new BeamOsPointLoad(body.id, node, body.direction);
 
@@ -295,7 +303,8 @@ export class EditorApi implements IEditorApiAlpha {
 
     deletePointLoad(body: IModelEntity): Promise<Result> {
         let el = this.getObjectByBeamOsUniqueId<BeamOsPointLoad>(
-            BeamOsPointLoad.beamOsObjectType + body.id
+            BeamOsPointLoad.beamOsObjectType,
+            body.id
         );
 
         this.removeObject3D(el);
@@ -320,7 +329,8 @@ export class EditorApi implements IEditorApiAlpha {
 
     createShearDiagram(body: ShearDiagramResponse): Promise<Result> {
         const el = this.getObjectByBeamOsUniqueId<BeamOsElement1d>(
-            BeamOsElement1d.beamOsObjectType + body.element1dId
+            BeamOsElement1d.beamOsObjectType,
+            body.element1dId
         );
         const shearDiagramResponse = new BeamOsDiagram(
             body.element1dId,
@@ -345,7 +355,8 @@ export class EditorApi implements IEditorApiAlpha {
 
     createMomentDiagram(body: MomentDiagramResponse): Promise<Result> {
         const el = this.getObjectByBeamOsUniqueId<BeamOsElement1d>(
-            BeamOsElement1d.beamOsObjectType + body.element1dId
+            BeamOsElement1d.beamOsObjectType,
+            body.element1dId
         );
         const shearDiagramResponse = new BeamOsDiagram(
             body.element1dId,
@@ -361,7 +372,8 @@ export class EditorApi implements IEditorApiAlpha {
 
     createDeflectionDiagram(body: DeflectionDiagramResponse): Promise<Result> {
         const el = this.getObjectByBeamOsUniqueId<BeamOsElement1d>(
-            BeamOsElement1d.beamOsObjectType + body.element1dId
+            BeamOsElement1d.beamOsObjectType,
+            body.element1dId
         );
         const diagramResponse = new BeamOsDiagramByPoints(
             body.element1dId,
@@ -495,7 +507,8 @@ export class EditorApi implements IEditorApiAlpha {
 
     reduceMoveNodeCommand(body: MoveNodeCommand): Promise<Result> {
         let node = this.getObjectByBeamOsUniqueId<BeamOsNode>(
-            BeamOsNode.beamOsObjectType + body.nodeId
+            BeamOsNode.beamOsObjectType,
+            body.nodeId
         );
 
         node.position.x = body.newLocation.x;
@@ -514,7 +527,12 @@ export class EditorApi implements IEditorApiAlpha {
         this.currentProposal.add(mesh);
     }
 
-    getObjectByBeamOsUniqueId<TObject>(beamOsUniqueId: string): TObject {
+    getObjectByBeamOsUniqueId<TObject>(
+        beamOsObjectType: BeamOsObjectType,
+        entityId: number
+    ): TObject {
+        let beamOsUniqueId =
+            objectTypeToString(beamOsObjectType) + entityId.toString();
         return (
             (this.currentModel.getObjectByProperty(
                 "beamOsUniqueId",
@@ -541,8 +559,11 @@ export class EditorApi implements IEditorApiAlpha {
     }
 
     tryGetObjectByBeamOsUniqueId<TObject>(
-        beamOsUniqueId: string
+        beamOsObjectType: BeamOsObjectType,
+        entityId: number
     ): TObject | null {
+        let beamOsUniqueId =
+            objectTypeToString(beamOsObjectType) + entityId.toString();
         return this.currentModel.getObjectByProperty(
             "beamOsUniqueId",
             beamOsUniqueId

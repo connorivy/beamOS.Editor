@@ -6,14 +6,20 @@ import { Line2 } from "three/examples/jsm/lines/Line2.js";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 import { BeamOsNode } from "./BeamOsNode";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
+import { BeamOsObjectType } from "../EditorApi/EditorEventsApi";
+import {
+    BeamOsObjectTypes,
+    objectTypeToString,
+} from "../EditorApi/EditorApiAlphaExtensions";
 
 export interface DiagramEventMap extends THREE.Object3DEventMap {
     moved: {};
 }
 
 export class BeamOsDiagramByPoints extends Line2 implements IBeamOsMesh {
-    public static beamOsObjectType: string = "Diagram";
-    public beamOsObjectType: string = BeamOsDiagramByPoints.beamOsObjectType;
+    public static beamOsObjectType: BeamOsObjectType = BeamOsObjectTypes.Other;
+    public beamOsObjectType: BeamOsObjectType =
+        BeamOsDiagramByPoints.beamOsObjectType;
     public beamOsUniqueId: string;
     private previousMaterial: LineMaterial | undefined;
     // private static DiagramHex: number = 0xff00ff;
@@ -36,7 +42,8 @@ export class BeamOsDiagramByPoints extends Line2 implements IBeamOsMesh {
             })
         );
 
-        this.beamOsUniqueId = BeamOsElement1d.beamOsObjectType + beamOsId;
+        this.beamOsUniqueId =
+            objectTypeToString(BeamOsElement1d.beamOsObjectType) + beamOsId;
 
         this.setPositions();
         this.computeLineDistances();
@@ -68,6 +75,10 @@ export class BeamOsDiagramByPoints extends Line2 implements IBeamOsMesh {
         }
         this.material = this.previousMaterial;
         this.previousMaterial = undefined;
+    }
+
+    public GetPosition(): THREE.Vector3 {
+        return this.startNode.position.clone();
     }
 
     private setPositions() {

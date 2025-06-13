@@ -5,7 +5,10 @@ import {
     ModelProposalResponse,
     Result,
 } from "./EditorApi/EditorApiAlpha";
-import { ResultFactory } from "./EditorApi/EditorApiAlphaExtensions";
+import {
+    objectTypeToString,
+    ResultFactory,
+} from "./EditorApi/EditorApiAlphaExtensions";
 import { EditorConfigurations } from "./EditorConfigurations";
 import {
     BeamOsElement1d,
@@ -52,7 +55,8 @@ export class ModelProposalDisplayer {
         const nodeProposalsDict: { [key: string]: BeamOsNodeProposal } = {};
         for (const node of body.modifyNodeProposals ?? []) {
             var existingNode = this.getObjectByBeamOsUniqueId<BeamOsNode>(
-                BeamOsNode.beamOsObjectType + node.existingNodeId
+                BeamOsNode.beamOsObjectType,
+                node.existingNodeId
             );
             filterer.add(
                 existingNode,
@@ -84,12 +88,13 @@ export class ModelProposalDisplayer {
             let startNode: BeamOsNode;
             if (el.startNodeId.existingId != undefined) {
                 startNode = this.getObjectByBeamOsUniqueId<BeamOsNode>(
-                    BeamOsNode.beamOsObjectType + el.startNodeId.existingId
+                    BeamOsNode.beamOsObjectType,
+                    el.startNodeId.existingId
                 );
             } else if (el.startNodeId.proposedId != undefined) {
                 startNode = this.getProposalObjectByBeamOsUniqueId<BeamOsNode>(
-                    BeamOsNodeProposal.beamOsObjectType +
-                        el.startNodeId.proposedId
+                    BeamOsNodeProposal.beamOsObjectType,
+                    el.startNodeId.proposedId
                 );
             } else {
                 throw new Error(
@@ -100,12 +105,13 @@ export class ModelProposalDisplayer {
             let endNode: BeamOsNode;
             if (el.endNodeId.existingId != undefined) {
                 endNode = this.getObjectByBeamOsUniqueId<BeamOsNode>(
-                    BeamOsNode.beamOsObjectType + el.endNodeId.existingId
+                    BeamOsNode.beamOsObjectType,
+                    el.endNodeId.existingId
                 );
             } else if (el.endNodeId.proposedId != undefined) {
                 endNode = this.getProposalObjectByBeamOsUniqueId<BeamOsNode>(
-                    BeamOsNodeProposal.beamOsObjectType +
-                        el.endNodeId.proposedId
+                    BeamOsNodeProposal.beamOsObjectType,
+                    el.endNodeId.proposedId
                 );
             } else {
                 throw new Error(
@@ -134,7 +140,8 @@ export class ModelProposalDisplayer {
             // Find the existing element
             const existingElement =
                 this.getObjectByBeamOsUniqueId<BeamOsElement1d>(
-                    BeamOsElement1d.beamOsObjectType + el.existingElement1dId
+                    BeamOsElement1d.beamOsObjectType,
+                    el.existingElement1dId
                 );
 
             // Find the start and end nodes for the proposal
@@ -144,13 +151,14 @@ export class ModelProposalDisplayer {
                     startNode = nodeProposalsDict[el.startNodeId.existingId];
                 } else {
                     startNode = this.getObjectByBeamOsUniqueId<BeamOsNode>(
-                        BeamOsNode.beamOsObjectType + el.startNodeId.existingId
+                        BeamOsNode.beamOsObjectType,
+                        el.startNodeId.existingId
                     );
                 }
             } else if (el.startNodeId.proposedId != undefined) {
                 startNode = this.getProposalObjectByBeamOsUniqueId<BeamOsNode>(
-                    BeamOsNodeProposal.beamOsObjectType +
-                        el.startNodeId.proposedId
+                    BeamOsNodeProposal.beamOsObjectType,
+                    el.startNodeId.proposedId
                 );
             } else {
                 throw new Error(
@@ -164,13 +172,14 @@ export class ModelProposalDisplayer {
                     endNode = nodeProposalsDict[el.endNodeId.existingId];
                 } else {
                     endNode = this.getObjectByBeamOsUniqueId<BeamOsNode>(
-                        BeamOsNode.beamOsObjectType + el.endNodeId.existingId
+                        BeamOsNode.beamOsObjectType,
+                        el.endNodeId.existingId
                     );
                 }
             } else if (el.endNodeId.proposedId != undefined) {
                 endNode = this.getProposalObjectByBeamOsUniqueId<BeamOsNode>(
-                    BeamOsNodeProposal.beamOsObjectType +
-                        el.endNodeId.proposedId
+                    BeamOsNodeProposal.beamOsObjectType,
+                    el.endNodeId.proposedId
                 );
             } else {
                 throw new Error(
@@ -225,7 +234,8 @@ export class ModelProposalDisplayer {
             // Find the existing element
             const existingElement =
                 this.getObjectByBeamOsUniqueId<BeamOsElement1d>(
-                    BeamOsElement1d.beamOsObjectType + id
+                    BeamOsElement1d.beamOsObjectType,
+                    id
                 );
 
             // Highlight the existing element (ghost it)
@@ -239,14 +249,14 @@ export class ModelProposalDisplayer {
             let startNode =
                 nodeProposalsDict[existingElement.startNode.beamOsId] ??
                 this.getObjectByBeamOsUniqueId<BeamOsNode>(
-                    BeamOsNode.beamOsObjectType +
-                        existingElement.startNode.beamOsId
+                    BeamOsNode.beamOsObjectType,
+                    existingElement.startNode.beamOsId
                 );
             let endNode =
                 nodeProposalsDict[existingElement.endNode.beamOsId] ??
                 this.getObjectByBeamOsUniqueId<BeamOsNode>(
-                    BeamOsNode.beamOsObjectType +
-                        existingElement.endNode.beamOsId
+                    BeamOsNode.beamOsObjectType,
+                    existingElement.endNode.beamOsId
                 );
 
             // Create the proposal element (new state)
@@ -281,7 +291,8 @@ export class ModelProposalDisplayer {
             // element1d
             const existingElement =
                 this.getObjectByBeamOsUniqueId<BeamOsElement1d>(
-                    BeamOsElement1d.beamOsObjectType + el.modelEntityId
+                    BeamOsElement1d.beamOsObjectType,
+                    el.modelEntityId
                 );
             filterer.add(
                 existingElement,
@@ -292,7 +303,8 @@ export class ModelProposalDisplayer {
         } else if (el.objectType == BeamOsObjectType._2) {
             // node
             const existingNode = this.getObjectByBeamOsUniqueId<BeamOsNode>(
-                BeamOsNode.beamOsObjectType + el.modelEntityId
+                BeamOsNode.beamOsObjectType,
+                el.modelEntityId
             );
             filterer.add(
                 existingNode,
@@ -307,7 +319,12 @@ export class ModelProposalDisplayer {
         this.proposalGroup.add(mesh);
     }
 
-    getObjectByBeamOsUniqueId<TObject>(beamOsUniqueId: string): TObject {
+    getObjectByBeamOsUniqueId<TObject>(
+        beamOsObjectType: BeamOsObjectType,
+        entityId: number
+    ): TObject {
+        let beamOsUniqueId =
+            objectTypeToString(beamOsObjectType) + entityId.toString();
         return (
             (this.modelGroup.getObjectByProperty(
                 "beamOsUniqueId",
@@ -320,8 +337,11 @@ export class ModelProposalDisplayer {
     }
 
     getProposalObjectByBeamOsUniqueId<TObject>(
-        beamOsUniqueId: string
+        beamOsObjectType: BeamOsObjectType,
+        entityId: number
     ): TObject {
+        let beamOsUniqueId =
+            objectTypeToString(beamOsObjectType) + entityId.toString();
         return (
             (this.proposalGroup.getObjectByProperty(
                 "beamOsUniqueId",

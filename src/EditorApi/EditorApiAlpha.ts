@@ -1734,6 +1734,11 @@ export enum BeamOsObjectType {
     _10 = 10,
     _11 = 11,
     _12 = 12,
+    _13 = 13,
+    _14 = 14,
+    _15 = 15,
+    _16 = 16,
+    _1000 = 1000,
 }
 
 export class ChangeSelectionCommand implements IChangeSelectionCommand {
@@ -4661,7 +4666,7 @@ export interface ISectionProfileResponse {
 
 export class SelectedObject implements ISelectedObject {
     id!: number;
-    typeName!: string;
+    objectType!: BeamOsObjectType;
 
     constructor(data?: ISelectedObject) {
         if (data) {
@@ -4675,7 +4680,7 @@ export class SelectedObject implements ISelectedObject {
     init(_data?: any) {
         if (_data) {
             this.id = _data["id"];
-            this.typeName = _data["typeName"];
+            this.objectType = _data["objectType"];
         }
     }
 
@@ -4689,14 +4694,14 @@ export class SelectedObject implements ISelectedObject {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
-        data["typeName"] = this.typeName;
+        data["objectType"] = this.objectType;
         return data;
     }
 }
 
 export interface ISelectedObject {
     id: number;
-    typeName: string;
+    objectType: BeamOsObjectType;
 }
 
 export class ShearDiagramResponse implements IShearDiagramResponse {

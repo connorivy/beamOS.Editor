@@ -2,9 +2,11 @@ import * as THREE from "three";
 import { BeamOsMesh } from "../BeamOsMesh";
 import { Restraint } from "../EditorApi/EditorApiAlpha";
 import {
+    BeamOsObjectTypes,
     RestraintContractUtils,
     RestraintType,
 } from "../EditorApi/EditorApiAlphaExtensions";
+import { BeamOsObjectType } from "../EditorApi/EditorEventsApi";
 
 export interface NodeEventMap extends THREE.Object3DEventMap {
     moved: {};
@@ -15,7 +17,7 @@ export class BeamOsNode extends BeamOsMesh<
     THREE.Material,
     NodeEventMap
 > {
-    public static beamOsObjectType: string = "Node";
+    public static beamOsObjectType: BeamOsObjectType = BeamOsObjectTypes.Node;
     // public beamOsObjectType: string = BeamOsNode.beamOsObjectType;
     private static nodeHex: number = 0x00ff00;
     public static nodeRadius: number = 0.1;
@@ -29,7 +31,7 @@ export class BeamOsNode extends BeamOsMesh<
         public zCoordinate: number,
         restraint: Restraint,
         yAxisUp: boolean,
-        objectType: string = BeamOsNode.beamOsObjectType
+        objectType: BeamOsObjectType = BeamOsNode.beamOsObjectType
     ) {
         let restraintType = RestraintContractUtils.GetRestraintType(restraint);
         super(
@@ -99,7 +101,8 @@ export class BeamOsNode extends BeamOsMesh<
 }
 
 export class BeamOsNodeProposal extends BeamOsNode {
-    public static beamOsObjectType: string = "NodeProposal";
+    // public static beamOsObjectType: BeamOsObjectType =
+    //     BeamOsObjectTypes.NodeProposal;
     constructor(
         public existingNodeId: number | undefined,
         beamOsid: number,
@@ -116,7 +119,7 @@ export class BeamOsNodeProposal extends BeamOsNode {
             zCoordinate,
             restraint,
             yAxisUp,
-            BeamOsNode.beamOsObjectType + "Proposal"
+            BeamOsObjectTypes.NodeProposal
         );
     }
 

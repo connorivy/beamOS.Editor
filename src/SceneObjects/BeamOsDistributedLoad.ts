@@ -4,6 +4,8 @@ import { BeamOsMesh } from "../BeamOsMesh";
 import { ShearDiagramResponse } from "../EditorApi/EditorApiAlpha";
 import { BeamOsPointLoad } from "./BeamOsPointLoad";
 import { BeamOsElement1d } from "./BeamOsElement1d";
+import { BeamOsObjectType } from "../EditorApi/EditorEventsApi";
+import { BeamOsObjectTypes } from "../EditorApi/EditorApiAlphaExtensions";
 
 export interface DistributedLoadEventMap extends THREE.Object3DEventMap {
     moved: {};
@@ -14,7 +16,8 @@ export class BeamOsDistributedLoad extends BeamOsMesh<
     THREE.Material,
     DistributedLoadEventMap
 > {
-    public static beamOsObjectType: string = "DistributedLoad";
+    public static beamOsObjectType: BeamOsObjectType =
+        BeamOsObjectTypes.DistributedLoad;
 
     private static DistributedLoadHex: number = 0x00ff00;
 

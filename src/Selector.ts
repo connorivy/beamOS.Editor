@@ -354,7 +354,7 @@ export class SelectorInfo {
                     (m) =>
                         new SelectedObject({
                             id: m.beamOsId,
-                            typeName: m.beamOsObjectType,
+                            objectType: m.beamOsObjectType,
                         })
                 ),
             })

@@ -148,6 +148,27 @@ export class EditorEventsApi implements IEditorEventsApi {
     }
 }
 
+export enum BeamOsObjectType {
+    _0 = 0,
+    _1 = 1,
+    _2 = 2,
+    _3 = 3,
+    _4 = 4,
+    _5 = 5,
+    _6 = 6,
+    _7 = 7,
+    _8 = 8,
+    _9 = 9,
+    _10 = 10,
+    _11 = 11,
+    _12 = 12,
+    _13 = 13,
+    _14 = 14,
+    _15 = 15,
+    _16 = 16,
+    _1000 = 1000,
+}
+
 export class ChangeSelectionCommand implements IChangeSelectionCommand {
     canvasId!: string;
     selectedObjects!: SelectedObject[];
@@ -534,7 +555,7 @@ export interface IRestraint {
 
 export class SelectedObject implements ISelectedObject {
     id!: number;
-    typeName!: string;
+    objectType!: BeamOsObjectType;
 
     constructor(data?: ISelectedObject) {
         if (data) {
@@ -548,7 +569,7 @@ export class SelectedObject implements ISelectedObject {
     init(_data?: any) {
         if (_data) {
             this.id = _data["id"];
-            this.typeName = _data["typeName"];
+            this.objectType = _data["objectType"];
         }
     }
 
@@ -562,14 +583,14 @@ export class SelectedObject implements ISelectedObject {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
-        data["typeName"] = this.typeName;
+        data["objectType"] = this.objectType;
         return data;
     }
 }
 
 export interface ISelectedObject {
     id: number;
-    typeName: string;
+    objectType: BeamOsObjectType;
 }
 
 export class ApiException extends Error {
