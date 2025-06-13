@@ -101,8 +101,8 @@ export class BeamOsNode extends BeamOsMesh<
 }
 
 export class BeamOsNodeProposal extends BeamOsNode {
-    // public static beamOsObjectType: BeamOsObjectType =
-    //     BeamOsObjectTypes.NodeProposal;
+    public static beamOsObjectType: BeamOsObjectType =
+        BeamOsObjectTypes.NodeProposal;
     constructor(
         public existingNodeId: number | undefined,
         beamOsid: number,
