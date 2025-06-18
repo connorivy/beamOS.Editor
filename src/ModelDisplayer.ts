@@ -31,7 +31,6 @@ export class ModelDisplayer {
                 await this.createNode(node);
             }
         }
-        console.log("Model response", modelResponse);
 
         // Prepare maps for quick lookup
         const internalNodesByElement1dId: Map<number, InternalNode[]> =
@@ -44,10 +43,6 @@ export class ModelDisplayer {
                 .get(internalNode.element1dId)!
                 .push(internalNode);
         });
-        console.log(
-            "Internal nodes by element1dId",
-            internalNodesByElement1dId
-        );
 
         // Iteratively process element1ds and internal nodes until all are created or no progress
         const unprocessedElement1ds = new Set(modelResponse.element1ds ?? []);
@@ -181,7 +176,6 @@ export class ModelDisplayer {
         return Promise.resolve(ResultFactory.Success());
     }
     createInternalNode(nodeResponse: InternalNode): Promise<Result> {
-        console.log("Creating internal node", nodeResponse);
         let element1d = this.getObjectByBeamOsUniqueId<BeamOsElement1d>(
             BeamOsElement1d.beamOsObjectType,
             nodeResponse.element1dId
@@ -222,7 +216,7 @@ export class ModelDisplayer {
             ) ??
             this.getObjectByBeamOsUniqueId<BeamOsInternalNode>(
                 BeamOsInternalNode.beamOsObjectType,
-                Element1dResponse.startNodeId
+                Element1dResponse.endNodeId
             );
 
         let el = new BeamOsElement1d(

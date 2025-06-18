@@ -26,7 +26,7 @@ export class BeamOsInternalNode extends BeamOsNodeBase {
         public ratioAlongElement1d: number,
         restraint: Restraint,
         yAxisUp: boolean,
-        objectType: BeamOsObjectType = BeamOsNode.beamOsObjectType
+        objectType: BeamOsObjectType = BeamOsInternalNode.beamOsObjectType
     ) {
         let restraintType = RestraintContractUtils.GetRestraintType(restraint);
         super(
