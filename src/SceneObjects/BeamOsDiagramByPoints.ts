@@ -4,13 +4,13 @@ import { DeflectionDiagramResponse } from "../EditorApi/EditorApiAlpha";
 import { BeamOsElement1d } from "./BeamOsElement1d";
 import { Line2 } from "three/examples/jsm/lines/Line2.js";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
-import { BeamOsNode } from "./BeamOsNode";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
 import { BeamOsObjectType } from "../EditorApi/EditorEventsApi";
 import {
     BeamOsObjectTypes,
     objectTypeToString,
 } from "../EditorApi/EditorApiAlphaExtensions";
+import { BeamOsNodeBase } from "./BeamOsNodeBase";
 
 export interface DiagramEventMap extends THREE.Object3DEventMap {
     moved: {};
@@ -26,8 +26,8 @@ export class BeamOsDiagramByPoints extends Line2 implements IBeamOsMesh {
 
     constructor(
         public beamOsId: number,
-        public startNode: BeamOsNode,
-        public endNode: BeamOsNode,
+        public startNode: BeamOsNodeBase,
+        public endNode: BeamOsNodeBase,
         private diagramResponse: DeflectionDiagramResponse
     ) {
         super(
@@ -78,14 +78,14 @@ export class BeamOsDiagramByPoints extends Line2 implements IBeamOsMesh {
     }
 
     public GetPosition(): THREE.Vector3 {
-        return this.startNode.position.clone();
+        return this.startNode.GetPosition().clone();
     }
 
     private setPositions() {
         const point3dArr = new Array<number>();
 
-        const worldStart = this.startNode.position;
-        const worldEnd = this.endNode.position;
+        const worldStart = this.startNode.GetPosition();
+        const worldEnd = this.endNode.GetPosition();
 
         for (let i = 0; i < this.diagramResponse.numSteps; i++) {
             let step = i / (this.diagramResponse.numSteps - 1);

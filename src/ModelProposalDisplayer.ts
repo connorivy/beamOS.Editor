@@ -1,8 +1,11 @@
 import { ColorFilterBuilder } from "./ColorFilterer";
 import {
     BeamOsObjectType,
+    CreateInternalNodeProposalResponse,
     DeleteModelEntityProposal,
+    InternalNode,
     ModelProposalResponse,
+    ModifyInternalNodeProposalResponse,
     Result,
 } from "./EditorApi/EditorApiAlpha";
 import {
@@ -16,6 +19,7 @@ import {
 } from "./SceneObjects/BeamOsElement1d";
 import { BeamOsNode, BeamOsNodeProposal } from "./SceneObjects/BeamOsNode";
 import { FilterStack } from "./FilterStack";
+import { BeamOsInternalNode } from "./SceneObjects/BeamOsInternalNode";
 
 export class ModelProposalDisplayer {
     constructor(
@@ -51,6 +55,31 @@ export class ModelProposalDisplayer {
 
             this.addProposalObject(newNode);
         }
+        for (const el of body.createInternalNodeProposals ?? []) {
+            if (el.element1dId.existingId == undefined) {
+                continue;
+            }
+
+            var existingElement1d =
+                this.getObjectByBeamOsUniqueId<BeamOsElement1d>(
+                    BeamOsElement1d.beamOsObjectType,
+                    el.element1dId.existingId
+                );
+            var newInternalNode = new BeamOsInternalNode(
+                el.id,
+                existingElement1d,
+                el.ratioAlongElement1d.value,
+                el.restraint,
+                this.config.yAxisUp
+            );
+            this.addProposalObject(newInternalNode);
+
+            let existingNode = this.tryGetObjectByBeamOsUniqueId<BeamOsNode>(
+                BeamOsNode.beamOsObjectType,
+                newInternalNode.beamOsId
+            );
+        }
+
         // create dictionary of nodeProposals
         const nodeProposalsDict: { [key: string]: BeamOsNodeProposal } = {};
         for (const node of body.modifyNodeProposals ?? []) {
@@ -60,7 +89,7 @@ export class ModelProposalDisplayer {
             );
             filterer.add(
                 existingNode,
-                this.config.createNodeProposalHex,
+                this.config.modifyElement1dProposalHexExisting,
                 true,
                 true
             );
@@ -83,6 +112,82 @@ export class ModelProposalDisplayer {
             nodeProposalsDict[existingNode.beamOsId] = newNode;
             this.addProposalObject(newNode);
         }
+
+        for (const el of body.modifyInternalNodeProposals ?? []) {
+            if (el.element1dId.existingId == undefined) {
+                continue;
+            }
+
+            var existingElement1d =
+                this.getObjectByBeamOsUniqueId<BeamOsElement1d>(
+                    BeamOsElement1d.beamOsObjectType,
+                    el.element1dId.existingId
+                );
+            var modifiedNode = new BeamOsInternalNode(
+                el.id,
+                existingElement1d,
+                el.ratioAlongElement1d.value,
+                el.restraint,
+                this.config.yAxisUp
+            );
+            filterer.add(
+                modifiedNode,
+                this.config.modifyNodeProposalHexNew,
+                false,
+                true
+            );
+            this.addProposalObject(modifiedNode);
+
+            let existingNode = this.getObjectByBeamOsUniqueId<BeamOsNode>(
+                BeamOsNode.beamOsObjectType,
+                el.existingInternalNodeId
+            );
+            filterer.add(
+                existingNode,
+                this.config.modifyElement1dProposalHexExisting,
+                true,
+                true
+            );
+        }
+
+        // const internalNodesByElement1dId: Map<
+        //     number,
+        //     CreateInternalNodeProposalResponse[]
+        // > = new Map<number, CreateInternalNodeProposalResponse[]>();
+        // body.createInternalNodeProposals?.forEach((internalNode) => {
+        //     internalNode.element1dId;
+        //     if (!internalNodesByElement1dId.has(internalNode.element1dId)) {
+        //         internalNodesByElement1dId.set(internalNode.element1dId, []);
+        //     }
+        //     (
+        //         internalNodesByElement1dId.get(internalNode.element1dId) ??
+        //         this.throwExpression(
+        //             "Internal nodes by element1dId should not be null"
+        //         )
+        //     ).push(internalNode);
+        // });
+        // const modifyInternalNodesByElement1dId: Map<
+        //     number,
+        //     ModifyInternalNodeProposalResponse[]
+        // > = new Map<number, ModifyInternalNodeProposalResponse[]>();
+        // body.modifyInternalNodeProposals?.forEach((internalNode) => {
+        //     if (
+        //         !modifyInternalNodesByElement1dId.has(internalNode.element1dId)
+        //     ) {
+        //         modifyInternalNodesByElement1dId.set(
+        //             internalNode.element1dId,
+        //             []
+        //         );
+        //     }
+        //     (
+        //         modifyInternalNodesByElement1dId.get(
+        //             internalNode.element1dId
+        //         ) ??
+        //         this.throwExpression(
+        //             "Internal nodes by element1dId should not be null"
+        //         )
+        //     ).push(internalNode);
+        // });
 
         for (const el of body.createElement1dProposals ?? []) {
             let startNode: BeamOsNode;
@@ -351,6 +456,18 @@ export class ModelProposalDisplayer {
                 "Could not find object with beamOsId " + beamOsUniqueId
             )
         );
+    }
+
+    tryGetObjectByBeamOsUniqueId<TObject>(
+        beamOsObjectType: BeamOsObjectType,
+        entityId: number
+    ): TObject | null {
+        let beamOsUniqueId =
+            objectTypeToString(beamOsObjectType) + entityId.toString();
+        return this.modelGroup.getObjectByProperty(
+            "beamOsUniqueId",
+            beamOsUniqueId
+        ) as TObject;
     }
 
     throwExpression(errorMessage: string): never {

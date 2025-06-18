@@ -6,25 +6,24 @@ import {
     RestraintType,
 } from "../EditorApi/EditorApiAlphaExtensions";
 import { BeamOsObjectType } from "../EditorApi/EditorEventsApi";
+import { BeamOsElement1d } from "./BeamOsElement1d";
+import { BeamOsNode } from "./BeamOsNode";
 import { BeamOsNodeBase } from "./BeamOsNodeBase";
 
-export interface NodeEventMap extends THREE.Object3DEventMap {
-    moved: {};
-}
-
-export class BeamOsNode extends BeamOsNodeBase {
-    public static beamOsObjectType: BeamOsObjectType = BeamOsObjectTypes.Node;
+export class BeamOsInternalNode extends BeamOsNodeBase {
+    public static beamOsObjectType: BeamOsObjectType =
+        BeamOsObjectTypes.InternalNode;
     // public beamOsObjectType: string = BeamOsNode.beamOsObjectType;
-    public static nodeHex: number = 0x00ff00;
+    private static nodeHex: number = 0x00ff00;
     public static nodeRadius: number = 0.1;
+    private onElementMovedFunc: (_event: any) => void;
 
     private _restraint: Restraint;
 
     constructor(
         beamOsid: number,
-        public xCoordinate: number,
-        public yCoordinate: number,
-        public zCoordinate: number,
+        private element1d: BeamOsElement1d,
+        public ratioAlongElement1d: number,
         restraint: Restraint,
         yAxisUp: boolean,
         objectType: BeamOsObjectType = BeamOsNode.beamOsObjectType
@@ -38,20 +37,14 @@ export class BeamOsNode extends BeamOsNodeBase {
         );
         this._restraint = restraint;
         this.setMeshPositionFromCoordinates();
+        this.onElementMovedFunc = this.onElementMoved.bind(this);
+        element1d.addEventListener("moved", this.onElementMovedFunc);
 
         // GetGeometry is assuming a yAxis is up (three js conventions).
         // Must rotate the geometry if that is the case
         if (!yAxisUp) {
             this.rotateOnAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
         }
-    }
-
-    GetPosition(): THREE.Vector3 {
-        return new THREE.Vector3(
-            this.xCoordinate,
-            this.yCoordinate,
-            this.zCoordinate
-        );
     }
 
     set restraint(value) {
@@ -63,8 +56,30 @@ export class BeamOsNode extends BeamOsNodeBase {
         return this._restraint;
     }
 
+    public GetPosition(): THREE.Vector3 {
+        // get the ratio between the start and end of the element1d
+        let element1dStart = this.element1d.startNode.GetPosition();
+        let element1dEnd = this.element1d.endNode.GetPosition();
+        let position = new THREE.Vector3();
+        position.x =
+            element1dStart.x +
+            (element1dEnd.x - element1dStart.x) * this.ratioAlongElement1d;
+        position.y =
+            element1dStart.y +
+            (element1dEnd.y - element1dStart.y) * this.ratioAlongElement1d;
+        position.z =
+            element1dStart.z +
+            (element1dEnd.z - element1dStart.z) * this.ratioAlongElement1d;
+        return position;
+    }
+
+    onElementMoved(_event: any) {
+        this.setMeshPositionFromCoordinates();
+        this.dispatchEvent({ type: "moved" });
+    }
+
     public setMeshPositionFromCoordinates() {
-        this.position.set(this.xCoordinate, this.yCoordinate, this.zCoordinate);
+        this.position.copy(this.GetPosition());
         this.geometry.attributes.position.needsUpdate = true;
     }
 
@@ -104,26 +119,25 @@ export class BeamOsNode extends BeamOsNodeBase {
     }
 }
 
-export class BeamOsNodeProposal extends BeamOsNode {
+export class BeamOsInternalNodeProposal extends BeamOsInternalNode {
     public static beamOsObjectType: BeamOsObjectType =
-        BeamOsObjectTypes.NodeProposal;
+        BeamOsObjectTypes.InternalNodeProposal;
+
     constructor(
         public existingNodeId: number | undefined,
         beamOsid: number,
-        xCoordinate: number,
-        yCoordinate: number,
-        zCoordinate: number,
+        element1d: BeamOsElement1d,
+        ratio: number,
         restraint: Restraint,
         yAxisUp: boolean
     ) {
         super(
             beamOsid,
-            xCoordinate,
-            yCoordinate,
-            zCoordinate,
+            element1d,
+            ratio,
             restraint,
             yAxisUp,
-            BeamOsObjectTypes.NodeProposal
+            BeamOsObjectTypes.InternalNodeProposal
         );
     }
 

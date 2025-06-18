@@ -21,6 +21,7 @@ import {
     PutNodeClientCommand,
     ModelProposalResponse,
     BeamOsObjectType,
+    InternalNode,
     // SetColorFilter,
     // ShearDiagramResponse,
 } from "./EditorApi/EditorApiAlpha";
@@ -37,6 +38,8 @@ import { BeamOsDiagramByPoints } from "./SceneObjects/BeamOsDiagramByPoints";
 import { ModelProposalDisplayer } from "./ModelProposalDisplayer";
 import { FilterStack } from "./FilterStack";
 import { Controls } from "./Controls";
+import { BeamOsInternalNode } from "./SceneObjects/BeamOsInternalNode";
+import { BeamOsNodeBase } from "./SceneObjects/BeamOsNodeBase";
 // import { BeamOsDiagram } from "./SceneObjects/BeamOsDiagram";
 // import { IBeamOsMesh } from "./BeamOsMesh";
 
@@ -104,8 +107,73 @@ export class EditorApi implements IEditorApiAlpha {
         modelResponse.nodes?.forEach(async (node) => {
             await this.createNode(node);
         });
+        console.log("Model response", modelResponse);
+
+        // create dictionary of element1dIds to internal nodes
+        const internalNodesByElement1dId: Map<number, InternalNode[]> = new Map<
+            number,
+            InternalNode[]
+        >();
+        modelResponse.internalNodes?.forEach((internalNode) => {
+            if (!internalNodesByElement1dId.has(internalNode.element1dId)) {
+                internalNodesByElement1dId.set(internalNode.element1dId, []);
+            }
+            (
+                internalNodesByElement1dId.get(internalNode.element1dId) ??
+                this.throwExpression(
+                    "Internal nodes by element1dId should not be null"
+                )
+            ).push(internalNode);
+        });
+
+        console.log(
+            "Internal nodes by element1dId",
+            internalNodesByElement1dId
+        );
         modelResponse.element1ds?.forEach(async (element1d) => {
+            let startNode =
+                this.tryGetObjectByBeamOsUniqueId<BeamOsNodeBase>(
+                    BeamOsNode.beamOsObjectType,
+                    element1d.startNodeId
+                ) ??
+                this.tryGetObjectByBeamOsUniqueId<BeamOsInternalNode>(
+                    BeamOsInternalNode.beamOsObjectType,
+                    element1d.startNodeId
+                );
+            let endNode =
+                this.tryGetObjectByBeamOsUniqueId<BeamOsNodeBase>(
+                    BeamOsNode.beamOsObjectType,
+                    element1d.endNodeId
+                ) ??
+                this.tryGetObjectByBeamOsUniqueId<BeamOsInternalNode>(
+                    BeamOsInternalNode.beamOsObjectType,
+                    element1d.startNodeId
+                );
+
+            if (startNode == null || endNode == null) {
+                return;
+            }
             await this.createElement1d(element1d);
+
+            if (
+                internalNodesByElement1dId.has(element1d.id) &&
+                internalNodesByElement1dId.get(element1d.id)?.length
+            ) {
+                const internalNodes =
+                    internalNodesByElement1dId.get(element1d.id) ?? [];
+                await this.createInternalNodes(internalNodes);
+            }
+        });
+        modelResponse.internalNodes?.forEach(async (el) => {
+            let element1d = this.tryGetObjectByBeamOsUniqueId<BeamOsElement1d>(
+                BeamOsElement1d.beamOsObjectType,
+                el.element1dId
+            );
+
+            if (element1d == null) {
+                return;
+            }
+            await this.createInternalNode(el);
         });
         modelResponse.pointLoads?.forEach(async (el) => {
             await this.createPointLoad(el);
@@ -121,14 +189,24 @@ export class EditorApi implements IEditorApiAlpha {
         return Promise.resolve(ResultFactory.Success());
     }
     createElement1d(Element1dResponse: Element1dResponse): Promise<Result> {
-        let startNode = this.sceneRoot.getObjectByProperty(
-            "beamOsId",
-            Element1dResponse.startNodeId
-        ) as BeamOsNode;
-        let endNode = this.sceneRoot.getObjectByProperty(
-            "beamOsId",
-            Element1dResponse.endNodeId
-        ) as BeamOsNode;
+        let startNode =
+            this.tryGetObjectByBeamOsUniqueId<BeamOsNodeBase>(
+                BeamOsNode.beamOsObjectType,
+                Element1dResponse.startNodeId
+            ) ??
+            this.getObjectByBeamOsUniqueId<BeamOsInternalNode>(
+                BeamOsInternalNode.beamOsObjectType,
+                Element1dResponse.startNodeId
+            );
+        let endNode =
+            this.tryGetObjectByBeamOsUniqueId<BeamOsNodeBase>(
+                BeamOsNode.beamOsObjectType,
+                Element1dResponse.endNodeId
+            ) ??
+            this.getObjectByBeamOsUniqueId<BeamOsInternalNode>(
+                BeamOsInternalNode.beamOsObjectType,
+                Element1dResponse.startNodeId
+            );
 
         let el = new BeamOsElement1d(
             Element1dResponse.id,
@@ -277,6 +355,68 @@ export class EditorApi implements IEditorApiAlpha {
     deleteNodes(body: IModelEntity[]): Promise<Result> {
         body.forEach(async (el) => {
             await this.deleteNode(el);
+        });
+
+        return Promise.resolve(ResultFactory.Success());
+    }
+
+    createInternalNodes(body: InternalNode[]): Promise<Result> {
+        body.forEach(async (el) => {
+            await this.createInternalNode(el);
+        });
+
+        return Promise.resolve(ResultFactory.Success());
+    }
+    createInternalNode(nodeResponse: InternalNode): Promise<Result> {
+        console.log("Creating internal node", nodeResponse);
+        let element1d = this.getObjectByBeamOsUniqueId<BeamOsElement1d>(
+            BeamOsElement1d.beamOsObjectType,
+            nodeResponse.element1dId
+        );
+        let node = new BeamOsInternalNode(
+            nodeResponse.id,
+            element1d,
+            nodeResponse.ratioAlongElement1d.value,
+            nodeResponse.restraint,
+            this.config.yAxisUp
+        );
+
+        this.addObject(node);
+        return Promise.resolve(ResultFactory.Success());
+    }
+
+    updateInternalNode(body: InternalNode): Promise<Result> {
+        let node = this.getObjectByBeamOsUniqueId<BeamOsInternalNode>(
+            BeamOsInternalNode.beamOsObjectType,
+            body.id
+        );
+
+        node.ratioAlongElement1d = body.ratioAlongElement1d.value;
+        node.restraint = body.restraint;
+
+        return Promise.resolve(ResultFactory.Success());
+    }
+
+    updateInternalNodes(body: InternalNode[]): Promise<Result> {
+        body.forEach(async (el) => {
+            await this.updateInternalNode(el);
+        });
+
+        return Promise.resolve(ResultFactory.Success());
+    }
+
+    deleteInternalNode(body: IModelEntity): Promise<Result> {
+        let el = this.getObjectByBeamOsUniqueId<BeamOsInternalNode>(
+            BeamOsInternalNode.beamOsObjectType,
+            body.id
+        );
+
+        this.removeObject3D(el);
+        return Promise.resolve(ResultFactory.Success());
+    }
+    deleteInternalNodes(body: IModelEntity[]): Promise<Result> {
+        body.forEach(async (el) => {
+            await this.deleteInternalNode(el);
         });
 
         return Promise.resolve(ResultFactory.Success());

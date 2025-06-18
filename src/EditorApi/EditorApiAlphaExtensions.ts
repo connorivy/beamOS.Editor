@@ -70,61 +70,67 @@ export const BeamOsObjectTypes = {
     Undefined: BeamOsObjectType._0,
     Model: BeamOsObjectType._1,
     Node: BeamOsObjectType._2,
-    Element1d: BeamOsObjectType._3,
-    Material: BeamOsObjectType._4,
-    SectionProfile: BeamOsObjectType._5,
-    PointLoad: BeamOsObjectType._6,
-    MomentLoad: BeamOsObjectType._7,
-    DistributedLoad: BeamOsObjectType._8,
-    DistributedMomentLoad: BeamOsObjectType._9,
-    LoadCase: BeamOsObjectType._10,
-    LoadCombination: BeamOsObjectType._11,
-    ModelProposal: BeamOsObjectType._12,
-    NodeProposal: BeamOsObjectType._13,
-    Element1dProposal: BeamOsObjectType._14,
-    MaterialProposal: BeamOsObjectType._15,
-    SectionProfileProposal: BeamOsObjectType._16,
+    InternalNode: BeamOsObjectType._3,
+    Element1d: BeamOsObjectType._4,
+    Material: BeamOsObjectType._5,
+    SectionProfile: BeamOsObjectType._6,
+    PointLoad: BeamOsObjectType._50,
+    MomentLoad: BeamOsObjectType._51,
+    DistributedLoad: BeamOsObjectType._52,
+    DistributedMomentLoad: BeamOsObjectType._53,
+    LoadCase: BeamOsObjectType._70,
+    LoadCombination: BeamOsObjectType._71,
+    ModelProposal: BeamOsObjectType._100,
+    NodeProposal: BeamOsObjectType._101,
+    InternalNodeProposal: BeamOsObjectType._102,
+    Element1dProposal: BeamOsObjectType._103,
+    MaterialProposal: BeamOsObjectType._104,
+    SectionProfileProposal: BeamOsObjectType._105,
     Other: BeamOsObjectType._1000,
 };
 
 export function objectTypeToString(beamOsObjectType: BeamOsObjectType): string {
     switch (beamOsObjectType) {
-        case BeamOsObjectType._0:
+        case BeamOsObjectTypes.Undefined:
             return "Undefined";
-        case BeamOsObjectType._1:
+        case BeamOsObjectTypes.Model:
             return "Model";
-        case BeamOsObjectType._2:
+        case BeamOsObjectTypes.Node:
             return "Node";
-        case BeamOsObjectType._3:
+        case BeamOsObjectTypes.InternalNode:
+            return "InternalNode";
+        case BeamOsObjectTypes.Element1d:
             return "Element1d";
-        case BeamOsObjectType._4:
+        case BeamOsObjectTypes.Material:
             return "Material";
-        case BeamOsObjectType._5:
+        case BeamOsObjectTypes.SectionProfile:
             return "SectionProfile";
-        case BeamOsObjectType._6:
+        case BeamOsObjectTypes.PointLoad:
             return "PointLoad";
-        case BeamOsObjectType._7:
+        case BeamOsObjectTypes.MomentLoad:
             return "MomentLoad";
-        case BeamOsObjectType._8:
+        case BeamOsObjectTypes.DistributedLoad:
             return "DistributedLoad";
 
-        case BeamOsObjectType._9:
+        case BeamOsObjectTypes.DistributedMomentLoad:
             return "DistributedMomentLoad";
-        case BeamOsObjectType._10:
+        case BeamOsObjectTypes.LoadCase:
             return "LoadCase";
-        case BeamOsObjectType._11:
+        case BeamOsObjectTypes.LoadCombination:
             return "LoadCombination";
-        case BeamOsObjectType._12:
+        case BeamOsObjectTypes.ModelProposal:
             return "ModelProposal";
-        case BeamOsObjectType._13:
+        case BeamOsObjectTypes.NodeProposal:
             return "NodeProposal";
-        case BeamOsObjectType._14:
+        case BeamOsObjectTypes.InternalNodeProposal:
+            return "InternalNodeProposal";
+        case BeamOsObjectTypes.Element1dProposal:
             return "Element1dProposal";
-        case BeamOsObjectType._15:
+        case BeamOsObjectTypes.MaterialProposal:
             return "MaterialProposal";
-        case BeamOsObjectType._16:
+        case BeamOsObjectTypes.SectionProfileProposal:
             return "SectionProfileProposal";
-        case BeamOsObjectType._1000:
+        case BeamOsObjectTypes.Other:
             return "Other";
         default:
             throw new Error(`Unknown BeamOsObjectType: ${beamOsObjectType}`);

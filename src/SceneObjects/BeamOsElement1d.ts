@@ -8,9 +8,10 @@ import {
     BeamOsObjectTypes,
     objectTypeToString,
 } from "../EditorApi/EditorApiAlphaExtensions";
+import { BeamOsNodeBase } from "./BeamOsNodeBase";
 
-export interface NodeEventMap extends THREE.Object3DEventMap {
-    moved: { value: THREE.Vector3 };
+export interface Element1dEventMap extends THREE.Object3DEventMap {
+    moved: {};
 }
 
 export class BeamOsElement1d extends Line2 implements IBeamOsMesh {
@@ -24,8 +25,8 @@ export class BeamOsElement1d extends Line2 implements IBeamOsMesh {
 
     constructor(
         public beamOsId: number,
-        public startNode: BeamOsNode,
-        public endNode: BeamOsNode,
+        public startNode: BeamOsNodeBase,
+        public endNode: BeamOsNodeBase,
         lineMaterial: LineMaterial,
         objectType: BeamOsObjectType = BeamOsElement1d.beamOsObjectType
     ) {
@@ -33,12 +34,12 @@ export class BeamOsElement1d extends Line2 implements IBeamOsMesh {
 
         this.beamOsObjectType = objectType;
         this.beamOsUniqueId = objectTypeToString(objectType) + beamOsId;
-        this.onNodeMovedFunc = this.onNodeMoved.bind(this);
 
         this.setPositions();
         this.computeLineDistances();
         this.scale.set(1, 1, 1);
 
+        this.onNodeMovedFunc = this.onNodeMoved.bind(this);
         startNode.addEventListener("moved", this.onNodeMovedFunc);
         endNode.addEventListener("moved", this.onNodeMovedFunc);
     }
@@ -90,18 +91,35 @@ export class BeamOsElement1d extends Line2 implements IBeamOsMesh {
         );
     }
 
+    // Strongly-typed event methods for custom event map
+    public addEventListener<K extends keyof Element1dEventMap>(
+        type: K,
+        listener: (event: Element1dEventMap[K]) => void
+    ): void {
+        super.addEventListener(type as string, listener as any);
+    }
+
+    public dispatchEvent<K extends keyof Element1dEventMap>(
+        event: { type: K } & Element1dEventMap[K]
+    ): void {
+        super.dispatchEvent(event as any);
+    }
+
     onNodeMoved(_event: any) {
         this.setPositions();
+        this.dispatchEvent({ type: "moved" });
     }
 
     setPositions() {
+        let startNodeLocation = this.startNode.GetPosition();
+        let endNodeLocation = this.endNode.GetPosition();
         this.geometry.setPositions([
-            this.startNode.position.x,
-            this.startNode.position.y,
-            this.startNode.position.z,
-            this.endNode.position.x,
-            this.endNode.position.y,
-            this.endNode.position.z,
+            startNodeLocation.x,
+            startNodeLocation.y,
+            startNodeLocation.z,
+            endNodeLocation.x,
+            endNodeLocation.y,
+            endNodeLocation.z,
         ]);
         this.geometry.attributes.position.needsUpdate = true;
     }

@@ -1728,16 +1728,18 @@ export enum BeamOsObjectType {
     _4 = 4,
     _5 = 5,
     _6 = 6,
-    _7 = 7,
-    _8 = 8,
-    _9 = 9,
-    _10 = 10,
-    _11 = 11,
-    _12 = 12,
-    _13 = 13,
-    _14 = 14,
-    _15 = 15,
-    _16 = 16,
+    _50 = 50,
+    _51 = 51,
+    _52 = 52,
+    _53 = 53,
+    _70 = 70,
+    _71 = 71,
+    _100 = 100,
+    _101 = 101,
+    _102 = 102,
+    _103 = 103,
+    _104 = 104,
+    _105 = 105,
     _1000 = 1000,
 }
 
@@ -1915,6 +1917,75 @@ export interface ICreateElement1dProposalResponse {
     sectionProfileId: ProposedID;
 }
 
+export class CreateInternalNodeProposalResponse implements ICreateInternalNodeProposalResponse {
+    element1dId!: ProposedID;
+    ratioAlongElement1d!: Ratio;
+    restraint!: Restraint;
+    metadata?: { [key: string]: string; } | undefined;
+    id!: number;
+
+    constructor(data?: ICreateInternalNodeProposalResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        if (!data) {
+            this.element1dId = new ProposedID();
+            this.ratioAlongElement1d = new Ratio();
+            this.restraint = new Restraint();
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.element1dId = _data["element1dId"] ? ProposedID.fromJS(_data["element1dId"]) : new ProposedID();
+            this.ratioAlongElement1d = _data["ratioAlongElement1d"] ? Ratio.fromJS(_data["ratioAlongElement1d"]) : new Ratio();
+            this.restraint = _data["restraint"] ? Restraint.fromJS(_data["restraint"]) : new Restraint();
+            if (_data["metadata"]) {
+                this.metadata = {} as any;
+                for (let key in _data["metadata"]) {
+                    if (_data["metadata"].hasOwnProperty(key))
+                        (<any>this.metadata)![key] = _data["metadata"][key];
+                }
+            }
+            this.id = _data["id"];
+        }
+    }
+
+    static fromJS(data: any): CreateInternalNodeProposalResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateInternalNodeProposalResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["element1dId"] = this.element1dId ? this.element1dId.toJSON() : <any>undefined;
+        data["ratioAlongElement1d"] = this.ratioAlongElement1d ? this.ratioAlongElement1d.toJSON() : <any>undefined;
+        data["restraint"] = this.restraint ? this.restraint.toJSON() : <any>undefined;
+        if (this.metadata) {
+            data["metadata"] = {};
+            for (let key in this.metadata) {
+                if (this.metadata.hasOwnProperty(key))
+                    (<any>data["metadata"])[key] = (<any>this.metadata)[key];
+            }
+        }
+        data["id"] = this.id;
+        return data;
+    }
+}
+
+export interface ICreateInternalNodeProposalResponse {
+    element1dId: ProposedID;
+    ratioAlongElement1d: Ratio;
+    restraint: Restraint;
+    metadata?: { [key: string]: string; } | undefined;
+    id: number;
+}
+
 export class CreateNodeProposalResponse implements ICreateNodeProposalResponse {
     locationPoint!: Point;
     restraint!: Restraint;
@@ -2038,6 +2109,7 @@ export class DeleteModelEntityProposal implements IDeleteModelEntityProposal {
     modelEntityId!: number;
     objectType!: BeamOsObjectType;
     id!: number;
+    proposalType!: ProposalType;
 
     constructor(data?: IDeleteModelEntityProposal) {
         if (data) {
@@ -2053,6 +2125,7 @@ export class DeleteModelEntityProposal implements IDeleteModelEntityProposal {
             this.modelEntityId = _data["modelEntityId"];
             this.objectType = _data["objectType"];
             this.id = _data["id"];
+            this.proposalType = _data["proposalType"];
         }
     }
 
@@ -2068,6 +2141,7 @@ export class DeleteModelEntityProposal implements IDeleteModelEntityProposal {
         data["modelEntityId"] = this.modelEntityId;
         data["objectType"] = this.objectType;
         data["id"] = this.id;
+        data["proposalType"] = this.proposalType;
         return data;
     }
 }
@@ -2076,6 +2150,7 @@ export interface IDeleteModelEntityProposal {
     modelEntityId: number;
     objectType: BeamOsObjectType;
     id: number;
+    proposalType: ProposalType;
 }
 
 export class DiagramConsistentIntervalResponse implements IDiagramConsistentIntervalResponse {
@@ -2635,6 +2710,74 @@ export interface IIModelEntity {
     id: number;
 }
 
+export class InternalNode implements IInternalNode {
+    element1dId!: number;
+    ratioAlongElement1d!: Ratio;
+    restraint!: Restraint;
+    metadata?: { [key: string]: string; } | undefined;
+    id!: number;
+
+    constructor(data?: IInternalNode) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        if (!data) {
+            this.ratioAlongElement1d = new Ratio();
+            this.restraint = new Restraint();
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.element1dId = _data["element1dId"];
+            this.ratioAlongElement1d = _data["ratioAlongElement1d"] ? Ratio.fromJS(_data["ratioAlongElement1d"]) : new Ratio();
+            this.restraint = _data["restraint"] ? Restraint.fromJS(_data["restraint"]) : new Restraint();
+            if (_data["metadata"]) {
+                this.metadata = {} as any;
+                for (let key in _data["metadata"]) {
+                    if (_data["metadata"].hasOwnProperty(key))
+                        (<any>this.metadata)![key] = _data["metadata"][key];
+                }
+            }
+            this.id = _data["id"];
+        }
+    }
+
+    static fromJS(data: any): InternalNode {
+        data = typeof data === 'object' ? data : {};
+        let result = new InternalNode();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["element1dId"] = this.element1dId;
+        data["ratioAlongElement1d"] = this.ratioAlongElement1d ? this.ratioAlongElement1d.toJSON() : <any>undefined;
+        data["restraint"] = this.restraint ? this.restraint.toJSON() : <any>undefined;
+        if (this.metadata) {
+            data["metadata"] = {};
+            for (let key in this.metadata) {
+                if (this.metadata.hasOwnProperty(key))
+                    (<any>data["metadata"])[key] = (<any>this.metadata)[key];
+            }
+        }
+        data["id"] = this.id;
+        return data;
+    }
+}
+
+export interface IInternalNode {
+    element1dId: number;
+    ratioAlongElement1d: Ratio;
+    restraint: Restraint;
+    metadata?: { [key: string]: string; } | undefined;
+    id: number;
+}
+
 export class Length implements ILength {
     value!: number;
     unit!: LengthUnit;
@@ -2881,6 +3024,8 @@ export class ModelProposalResponse implements IModelProposalResponse {
     modelProposal!: ModelProposalInfo;
     createNodeProposals?: CreateNodeProposalResponse[] | undefined;
     modifyNodeProposals?: ModifyNodeProposalResponse[] | undefined;
+    createInternalNodeProposals?: CreateInternalNodeProposalResponse[] | undefined;
+    modifyInternalNodeProposals?: ModifyInternalNodeProposalResponse[] | undefined;
     createElement1dProposals?: CreateElement1dProposalResponse[] | undefined;
     modifyElement1dProposals?: ModifyElement1dProposalResponse[] | undefined;
     element1dsModifiedBecauseOfNodeChange?: number[] | undefined;
@@ -2921,6 +3066,16 @@ export class ModelProposalResponse implements IModelProposalResponse {
                 this.modifyNodeProposals = [] as any;
                 for (let item of _data["modifyNodeProposals"])
                     this.modifyNodeProposals!.push(ModifyNodeProposalResponse.fromJS(item));
+            }
+            if (Array.isArray(_data["createInternalNodeProposals"])) {
+                this.createInternalNodeProposals = [] as any;
+                for (let item of _data["createInternalNodeProposals"])
+                    this.createInternalNodeProposals!.push(CreateInternalNodeProposalResponse.fromJS(item));
+            }
+            if (Array.isArray(_data["modifyInternalNodeProposals"])) {
+                this.modifyInternalNodeProposals = [] as any;
+                for (let item of _data["modifyInternalNodeProposals"])
+                    this.modifyInternalNodeProposals!.push(ModifyInternalNodeProposalResponse.fromJS(item));
             }
             if (Array.isArray(_data["createElement1dProposals"])) {
                 this.createElement1dProposals = [] as any;
@@ -3012,6 +3167,16 @@ export class ModelProposalResponse implements IModelProposalResponse {
             for (let item of this.modifyNodeProposals)
                 data["modifyNodeProposals"].push(item ? item.toJSON() : <any>undefined);
         }
+        if (Array.isArray(this.createInternalNodeProposals)) {
+            data["createInternalNodeProposals"] = [];
+            for (let item of this.createInternalNodeProposals)
+                data["createInternalNodeProposals"].push(item ? item.toJSON() : <any>undefined);
+        }
+        if (Array.isArray(this.modifyInternalNodeProposals)) {
+            data["modifyInternalNodeProposals"] = [];
+            for (let item of this.modifyInternalNodeProposals)
+                data["modifyInternalNodeProposals"].push(item ? item.toJSON() : <any>undefined);
+        }
         if (Array.isArray(this.createElement1dProposals)) {
             data["createElement1dProposals"] = [];
             for (let item of this.createElement1dProposals)
@@ -3087,6 +3252,8 @@ export interface IModelProposalResponse {
     modelProposal: ModelProposalInfo;
     createNodeProposals?: CreateNodeProposalResponse[] | undefined;
     modifyNodeProposals?: ModifyNodeProposalResponse[] | undefined;
+    createInternalNodeProposals?: CreateInternalNodeProposalResponse[] | undefined;
+    modifyInternalNodeProposals?: ModifyInternalNodeProposalResponse[] | undefined;
     createElement1dProposals?: CreateElement1dProposalResponse[] | undefined;
     modifyElement1dProposals?: ModifyElement1dProposalResponse[] | undefined;
     element1dsModifiedBecauseOfNodeChange?: number[] | undefined;
@@ -3109,6 +3276,7 @@ export class ModelResponse implements IModelResponse {
     settings!: ModelSettings;
     lastModified!: Date;
     nodes?: NodeResponse[] | undefined;
+    internalNodes?: InternalNode[] | undefined;
     element1ds?: Element1dResponse[] | undefined;
     materials?: MaterialResponse[] | undefined;
     sectionProfiles?: SectionProfileResponse[] | undefined;
@@ -3142,6 +3310,11 @@ export class ModelResponse implements IModelResponse {
                 this.nodes = [] as any;
                 for (let item of _data["nodes"])
                     this.nodes!.push(NodeResponse.fromJS(item));
+            }
+            if (Array.isArray(_data["internalNodes"])) {
+                this.internalNodes = [] as any;
+                for (let item of _data["internalNodes"])
+                    this.internalNodes!.push(InternalNode.fromJS(item));
             }
             if (Array.isArray(_data["element1ds"])) {
                 this.element1ds = [] as any;
@@ -3210,6 +3383,11 @@ export class ModelResponse implements IModelResponse {
             for (let item of this.nodes)
                 data["nodes"].push(item ? item.toJSON() : <any>undefined);
         }
+        if (Array.isArray(this.internalNodes)) {
+            data["internalNodes"] = [];
+            for (let item of this.internalNodes)
+                data["internalNodes"].push(item ? item.toJSON() : <any>undefined);
+        }
         if (Array.isArray(this.element1ds)) {
             data["element1ds"] = [];
             for (let item of this.element1ds)
@@ -3266,6 +3444,7 @@ export interface IModelResponse {
     settings: ModelSettings;
     lastModified: Date;
     nodes?: NodeResponse[] | undefined;
+    internalNodes?: InternalNode[] | undefined;
     element1ds?: Element1dResponse[] | undefined;
     materials?: MaterialResponse[] | undefined;
     sectionProfiles?: SectionProfileResponse[] | undefined;
@@ -3334,6 +3513,8 @@ export class ModifyElement1dProposalResponse implements IModifyElement1dProposal
     endNodeId!: ProposedID;
     materialId!: ProposedID;
     sectionProfileId!: ProposedID;
+    readonly existingId!: number;
+    objectType!: BeamOsObjectType;
 
     constructor(data?: IModifyElement1dProposalResponse) {
         if (data) {
@@ -3367,6 +3548,8 @@ export class ModifyElement1dProposalResponse implements IModifyElement1dProposal
             this.endNodeId = _data["endNodeId"] ? ProposedID.fromJS(_data["endNodeId"]) : new ProposedID();
             this.materialId = _data["materialId"] ? ProposedID.fromJS(_data["materialId"]) : new ProposedID();
             this.sectionProfileId = _data["sectionProfileId"] ? ProposedID.fromJS(_data["sectionProfileId"]) : new ProposedID();
+            (<any>this).existingId = _data["existingId"];
+            this.objectType = _data["objectType"];
         }
     }
 
@@ -3393,6 +3576,8 @@ export class ModifyElement1dProposalResponse implements IModifyElement1dProposal
         data["endNodeId"] = this.endNodeId ? this.endNodeId.toJSON() : <any>undefined;
         data["materialId"] = this.materialId ? this.materialId.toJSON() : <any>undefined;
         data["sectionProfileId"] = this.sectionProfileId ? this.sectionProfileId.toJSON() : <any>undefined;
+        data["existingId"] = this.existingId;
+        data["objectType"] = this.objectType;
         return data;
     }
 }
@@ -3406,6 +3591,81 @@ export interface IModifyElement1dProposalResponse {
     endNodeId: ProposedID;
     materialId: ProposedID;
     sectionProfileId: ProposedID;
+    existingId: number;
+    objectType: BeamOsObjectType;
+}
+
+export class ModifyInternalNodeProposalResponse implements IModifyInternalNodeProposalResponse {
+    element1dId!: ProposedID;
+    ratioAlongElement1d!: Ratio;
+    restraint!: Restraint;
+    metadata?: { [key: string]: string; } | undefined;
+    id!: number;
+    existingInternalNodeId!: number;
+
+    constructor(data?: IModifyInternalNodeProposalResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        if (!data) {
+            this.element1dId = new ProposedID();
+            this.ratioAlongElement1d = new Ratio();
+            this.restraint = new Restraint();
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.element1dId = _data["element1dId"] ? ProposedID.fromJS(_data["element1dId"]) : new ProposedID();
+            this.ratioAlongElement1d = _data["ratioAlongElement1d"] ? Ratio.fromJS(_data["ratioAlongElement1d"]) : new Ratio();
+            this.restraint = _data["restraint"] ? Restraint.fromJS(_data["restraint"]) : new Restraint();
+            if (_data["metadata"]) {
+                this.metadata = {} as any;
+                for (let key in _data["metadata"]) {
+                    if (_data["metadata"].hasOwnProperty(key))
+                        (<any>this.metadata)![key] = _data["metadata"][key];
+                }
+            }
+            this.id = _data["id"];
+            this.existingInternalNodeId = _data["existingInternalNodeId"];
+        }
+    }
+
+    static fromJS(data: any): ModifyInternalNodeProposalResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new ModifyInternalNodeProposalResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["element1dId"] = this.element1dId ? this.element1dId.toJSON() : <any>undefined;
+        data["ratioAlongElement1d"] = this.ratioAlongElement1d ? this.ratioAlongElement1d.toJSON() : <any>undefined;
+        data["restraint"] = this.restraint ? this.restraint.toJSON() : <any>undefined;
+        if (this.metadata) {
+            data["metadata"] = {};
+            for (let key in this.metadata) {
+                if (this.metadata.hasOwnProperty(key))
+                    (<any>data["metadata"])[key] = (<any>this.metadata)[key];
+            }
+        }
+        data["id"] = this.id;
+        data["existingInternalNodeId"] = this.existingInternalNodeId;
+        return data;
+    }
+}
+
+export interface IModifyInternalNodeProposalResponse {
+    element1dId: ProposedID;
+    ratioAlongElement1d: Ratio;
+    restraint: Restraint;
+    metadata?: { [key: string]: string; } | undefined;
+    id: number;
+    existingInternalNodeId: number;
 }
 
 export class ModifyNodeProposalResponse implements IModifyNodeProposalResponse {
@@ -4089,6 +4349,13 @@ export enum ProposalIssueSeverity {
     _40 = 40,
 }
 
+export enum ProposalType {
+    _0 = 0,
+    _1 = 1,
+    _2 = 2,
+    _3 = 3,
+}
+
 export class ProposedID implements IProposedID {
     existingId?: number | undefined;
     proposedId?: number | undefined;
@@ -4311,6 +4578,52 @@ export interface IPutSectionProfileRequest {
     weakAxisShearArea?: number | undefined;
     lengthUnit: LengthUnit;
     id: number;
+}
+
+export class Ratio implements IRatio {
+    value!: number;
+    unit!: RatioUnit;
+
+    constructor(data?: IRatio) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.value = _data["value"];
+            this.unit = _data["unit"];
+        }
+    }
+
+    static fromJS(data: any): Ratio {
+        data = typeof data === 'object' ? data : {};
+        let result = new Ratio();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["value"] = this.value;
+        data["unit"] = this.unit;
+        return data;
+    }
+}
+
+export interface IRatio {
+    value: number;
+    unit: RatioUnit;
+}
+
+export enum RatioUnit {
+    _0 = 0,
+    _1 = 1,
+    _2 = 2,
 }
 
 export class Restraint implements IRestraint {
