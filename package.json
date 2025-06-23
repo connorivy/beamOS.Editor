@@ -1,7 +1,7 @@
 {
     "name": "beamos-editor",
     "private": false,
-    "version": "0.0.16",
+    "version": "0.0.17",
     "type": "module",
     "files": [
         "dist"
@@ -17,6 +17,7 @@
         "vite": "^5.0.8"
     },
     "dependencies": {
+        "camera-controls": "^2.10.1",
         "three": "^0.159.0"
     },
     "description": "three js based editor for beamOS",

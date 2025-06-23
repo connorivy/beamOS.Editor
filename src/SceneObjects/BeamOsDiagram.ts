@@ -2,6 +2,11 @@ import * as THREE from "three";
 import { BeamOsMesh } from "../BeamOsMesh";
 import { DiagramConsistentIntervalResponse } from "../EditorApi/EditorApiAlpha";
 import { BeamOsElement1d } from "./BeamOsElement1d";
+import { BeamOsObjectType } from "../EditorApi/EditorEventsApi";
+import {
+    BeamOsObjectTypes,
+    objectTypeToString,
+} from "../EditorApi/EditorApiAlphaExtensions";
 
 export interface DiagramEventMap extends THREE.Object3DEventMap {
     moved: {};
@@ -12,7 +17,7 @@ export class BeamOsDiagram extends BeamOsMesh<
     THREE.Material,
     DiagramEventMap
 > {
-    public static beamOsObjectType: string = "Diagram";
+    public static beamOsObjectType: BeamOsObjectType = BeamOsObjectTypes.Other;
     public beamOsUniqueId: string;
     // private static DiagramHex: number = 0xff00ff;
 
@@ -35,7 +40,8 @@ export class BeamOsDiagram extends BeamOsMesh<
             })
         );
 
-        this.beamOsUniqueId = BeamOsElement1d.beamOsObjectType + beamOsId;
+        this.beamOsUniqueId =
+            objectTypeToString(BeamOsElement1d.beamOsObjectType) + beamOsId;
 
         this.position.set(
             element1d.startNode.position.x,

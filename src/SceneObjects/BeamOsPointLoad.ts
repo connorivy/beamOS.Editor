@@ -3,6 +3,8 @@ import { BeamOsMesh } from "../BeamOsMesh";
 import { BufferGeometryUtils } from "three/examples/jsm/Addons.js";
 import { BeamOsNode } from "./BeamOsNode";
 import { Vector3 } from "../EditorApi/EditorApiAlpha";
+import { BeamOsObjectType } from "../EditorApi/EditorEventsApi";
+import { BeamOsObjectTypes } from "../EditorApi/EditorApiAlphaExtensions";
 
 export interface PointLoadEventMap extends THREE.Object3DEventMap {
     moved: {};
@@ -13,7 +15,8 @@ export class BeamOsPointLoad extends BeamOsMesh<
     THREE.Material,
     PointLoadEventMap
 > {
-    public static beamOsObjectType: string = "PointLoad";
+    public static beamOsObjectType: BeamOsObjectType =
+        BeamOsObjectTypes.PointLoad;
     // public beamOsObjectType: string = "PointLoad";
     private onNodeMovedFunc: (_event: any) => void;
 
@@ -34,7 +37,7 @@ export class BeamOsPointLoad extends BeamOsMesh<
     ) {
         super(
             id,
-            "PointLoad",
+            BeamOsPointLoad.beamOsObjectType,
             BeamOsPointLoad.pointLoadGeometry,
             new THREE.MeshLambertMaterial({
                 color: BeamOsPointLoad.PointLoadHex,
