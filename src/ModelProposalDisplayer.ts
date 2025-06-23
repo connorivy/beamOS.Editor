@@ -1,11 +1,8 @@
 import { ColorFilterBuilder } from "./ColorFilterer";
 import {
     BeamOsObjectType,
-    CreateInternalNodeProposalResponse,
     DeleteModelEntityProposal,
-    InternalNode,
     ModelProposalResponse,
-    ModifyInternalNodeProposalResponse,
     Result,
 } from "./EditorApi/EditorApiAlpha";
 import {
@@ -73,11 +70,6 @@ export class ModelProposalDisplayer {
                 this.config.yAxisUp
             );
             this.addProposalObject(newInternalNode);
-
-            let existingNode = this.tryGetObjectByBeamOsUniqueId<BeamOsNode>(
-                BeamOsNode.beamOsObjectType,
-                newInternalNode.beamOsId
-            );
         }
 
         // create dictionary of nodeProposals

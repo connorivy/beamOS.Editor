@@ -14,7 +14,6 @@ export class BeamOsInternalNode extends BeamOsNodeBase {
     public static beamOsObjectType: BeamOsObjectType =
         BeamOsObjectTypes.InternalNode;
     // public beamOsObjectType: string = BeamOsNode.beamOsObjectType;
-    private static nodeHex: number = 0x00ff00;
     public static nodeRadius: number = 0.1;
     private onElementMovedFunc: (_event: any) => void;
 
