@@ -240,10 +240,15 @@ export class ModelDisplayer {
     }
 
     createPointLoad(body: PointLoadResponse): Promise<Result> {
-        const node = this.getObjectByBeamOsUniqueId<BeamOsNode>(
-            BeamOsNode.beamOsObjectType,
-            body.nodeId
-        );
+        const node =
+            this.tryGetObjectByBeamOsUniqueId<BeamOsNodeBase>(
+                BeamOsNode.beamOsObjectType,
+                body.nodeId
+            ) ??
+            this.getObjectByBeamOsUniqueId<BeamOsInternalNode>(
+                BeamOsInternalNode.beamOsObjectType,
+                body.nodeId
+            );
         const pointLoad = new BeamOsPointLoad(body.id, node, body.direction);
 
         this.addObject(pointLoad);

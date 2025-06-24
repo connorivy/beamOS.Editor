@@ -24,11 +24,15 @@ export class Controls {
         if (e.key === "Shift") {
             this.cameraControls.mouseButtons.middle =
                 CameraControls.ACTION.ROTATE;
+            this.cameraControls.mouseButtons.right =
+                CameraControls.ACTION.ROTATE;
         }
     };
     private handleShiftKeyUp = (e: KeyboardEvent) => {
         if (e.key === "Shift") {
             this.cameraControls.mouseButtons.middle =
+                CameraControls.ACTION.TRUCK;
+            this.cameraControls.mouseButtons.right =
                 CameraControls.ACTION.TRUCK;
         }
     };

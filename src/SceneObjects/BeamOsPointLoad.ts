@@ -5,6 +5,7 @@ import { BeamOsNode } from "./BeamOsNode";
 import { Vector3 } from "../EditorApi/EditorApiAlpha";
 import { BeamOsObjectType } from "../EditorApi/EditorEventsApi";
 import { BeamOsObjectTypes } from "../EditorApi/EditorApiAlphaExtensions";
+import { BeamOsNodeBase } from "./BeamOsNodeBase";
 
 export interface PointLoadEventMap extends THREE.Object3DEventMap {
     moved: {};
@@ -32,7 +33,7 @@ export class BeamOsPointLoad extends BeamOsMesh<
 
     constructor(
         id: number,
-        private node: BeamOsNode,
+        private node: BeamOsNodeBase,
         private direction: Vector3
     ) {
         super(
