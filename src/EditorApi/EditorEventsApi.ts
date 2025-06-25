@@ -156,6 +156,7 @@ export enum BeamOsObjectType {
     _4 = 4,
     _5 = 5,
     _6 = 6,
+    _7 = 7,
     _50 = 50,
     _51 = 51,
     _52 = 52,
@@ -168,7 +169,7 @@ export enum BeamOsObjectType {
     _103 = 103,
     _104 = 104,
     _105 = 105,
-    _1000 = 1000,
+    _255 = 255,
 }
 
 export class ChangeSelectionCommand implements IChangeSelectionCommand {

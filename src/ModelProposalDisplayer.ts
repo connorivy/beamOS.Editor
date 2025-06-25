@@ -27,7 +27,6 @@ export class ModelProposalDisplayer {
     ) {}
 
     public displayModelProposal(body: ModelProposalResponse): Promise<Result> {
-        console.log("displayModelProposal", body);
         const filterer = new ColorFilterBuilder();
 
         for (const el of body.deleteModelEntityProposals ?? []) {

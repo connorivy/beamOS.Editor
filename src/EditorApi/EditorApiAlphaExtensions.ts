@@ -74,6 +74,7 @@ export const BeamOsObjectTypes = {
     Element1d: BeamOsObjectType._4,
     Material: BeamOsObjectType._5,
     SectionProfile: BeamOsObjectType._6,
+    SectionProfileFromLibrary: BeamOsObjectType._7,
     PointLoad: BeamOsObjectType._50,
     MomentLoad: BeamOsObjectType._51,
     DistributedLoad: BeamOsObjectType._52,
@@ -86,7 +87,7 @@ export const BeamOsObjectTypes = {
     Element1dProposal: BeamOsObjectType._103,
     MaterialProposal: BeamOsObjectType._104,
     SectionProfileProposal: BeamOsObjectType._105,
-    Other: BeamOsObjectType._1000,
+    Other: BeamOsObjectType._255,
 };
 
 export function objectTypeToString(beamOsObjectType: BeamOsObjectType): string {
@@ -105,6 +106,8 @@ export function objectTypeToString(beamOsObjectType: BeamOsObjectType): string {
             return "Material";
         case BeamOsObjectTypes.SectionProfile:
             return "SectionProfile";
+        case BeamOsObjectTypes.SectionProfileFromLibrary:
+            return "SectionProfileFromLibrary";
         case BeamOsObjectTypes.PointLoad:
             return "PointLoad";
         case BeamOsObjectTypes.MomentLoad:
